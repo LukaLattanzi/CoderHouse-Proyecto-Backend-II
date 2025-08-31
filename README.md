@@ -213,14 +213,14 @@ Crear archivo `.env` en la raíz del proyecto:
 PORT=8080
 
 # Conexión a MongoDB Atlas
-MONGO_URL=mongodb+srv://usuario:password@cluster.mongodb.net/ecommerce
+MONGO_URL=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
 
 # Secretos para encriptación
-SESSION_SECRET=tu_session_secret_muy_seguro_aqui
-SECRET_KEY=tu_jwt_secret_muy_seguro_aqui
+SESSION_SECRET=your-super-secret-session-key-here
+SECRET_KEY=your-jwt-secret-key-here
 ```
 
-> **📝 Nota**: Reemplaza `usuario`, `password` y `cluster` con tus credenciales reales de MongoDB Atlas.
+> **📝 Nota**: Reemplaza `<username>`, `<password>`, `<cluster>` y `<database>` con tus credenciales reales de MongoDB Atlas.
 
 ### **🚀 Ejecución del Proyecto**
 
