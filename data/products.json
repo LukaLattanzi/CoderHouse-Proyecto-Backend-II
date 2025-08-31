@@ -7,7 +7,9 @@
     "stock": 35,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-laptop.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-laptop.jpg"
+    ]
   },
   {
     "title": "Smartphone Nova 11",
@@ -17,7 +19,9 @@
     "stock": 120,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-phone.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-phone.jpg"
+    ]
   },
   {
     "title": "Café de Origen Colombiano",
@@ -27,7 +31,9 @@
     "stock": 300,
     "category": "Alimentos",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-coffee.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-coffee.jpg"
+    ]
   },
   {
     "title": "Zapatillas Runner Flex",
@@ -37,7 +43,9 @@
     "stock": 250,
     "category": "Ropa y Calzado",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-shoes.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-shoes.jpg"
+    ]
   },
   {
     "title": "Libro 'Crónicas de la Nube'",
@@ -47,7 +55,9 @@
     "stock": 80,
     "category": "Libros",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-book.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-book.jpg"
+    ]
   },
   {
     "title": "Teclado Mecánico RGB",
@@ -57,7 +67,9 @@
     "stock": 90,
     "category": "Accesorios",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-keyboard.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-keyboard.jpg"
+    ]
   },
   {
     "title": "Mochila de Viaje Explorer",
@@ -67,7 +79,9 @@
     "stock": 110,
     "category": "Accesorios",
     "status": false,
-    "thumbnails": ["https://i.imgur.com/example-backpack.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-backpack.jpg"
+    ]
   },
   {
     "title": "Auriculares Inalámbricos Sonus",
@@ -77,7 +91,9 @@
     "stock": 150,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-headphones.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-headphones.jpg"
+    ]
   },
   {
     "title": "Camiseta de Algodón Orgánico",
@@ -87,7 +103,9 @@
     "stock": 400,
     "category": "Ropa y Calzado",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-tshirt.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-tshirt.jpg"
+    ]
   },
   {
     "title": "Botella de Agua Reutilizable",
@@ -97,7 +115,9 @@
     "stock": 500,
     "category": "Hogar",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-bottle.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-bottle.jpg"
+    ]
   },
   {
     "title": "Smartwatch FitLife 2",
@@ -107,7 +127,9 @@
     "stock": 130,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-watch.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-watch.jpg"
+    ]
   },
   {
     "title": "Aceite de Oliva Extra Virgen",
@@ -117,7 +139,9 @@
     "stock": 200,
     "category": "Alimentos",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-oil.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-oil.jpg"
+    ]
   },
   {
     "title": "Juego de Mesa 'Colonizadores'",
@@ -127,7 +151,9 @@
     "stock": 60,
     "category": "Juguetes y Juegos",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-boardgame.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-boardgame.jpg"
+    ]
   },
   {
     "title": "Silla de Oficina Ergonómica",
@@ -137,7 +163,9 @@
     "stock": 40,
     "category": "Hogar",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-chair.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-chair.jpg"
+    ]
   },
   {
     "title": "Monitor Curvo Ultrawide 34\"",
@@ -147,7 +175,9 @@
     "stock": 55,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-monitor.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-monitor.jpg"
+    ]
   },
   {
     "title": "Vino Tinto Reserva",
@@ -157,7 +187,9 @@
     "stock": 180,
     "category": "Alimentos",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-wine.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-wine.jpg"
+    ]
   },
   {
     "title": "Chaqueta Impermeable Trekker",
@@ -167,7 +199,9 @@
     "stock": 95,
     "category": "Ropa y Calzado",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-jacket.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-jacket.jpg"
+    ]
   },
   {
     "title": "Cámara de Acción 4K",
@@ -177,7 +211,9 @@
     "stock": 70,
     "category": "Electrónica",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-actioncam.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-actioncam.jpg"
+    ]
   },
   {
     "title": "Lámpara de Escritorio LED",
@@ -187,7 +223,9 @@
     "stock": 220,
     "category": "Hogar",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-lamp.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-lamp.jpg"
+    ]
   },
   {
     "title": "Yogur Griego Natural",
@@ -197,6 +235,8 @@
     "stock": 450,
     "category": "Alimentos",
     "status": true,
-    "thumbnails": ["https://i.imgur.com/example-yogurt.jpg"]
+    "thumbnails": [
+      "https://i.imgur.com/example-yogurt.jpg"
+    ]
   }
 ]

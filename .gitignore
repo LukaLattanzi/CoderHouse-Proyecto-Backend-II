@@ -1,3 +1,2 @@
-# Archivo .gitignore
 node_modules/
 .env

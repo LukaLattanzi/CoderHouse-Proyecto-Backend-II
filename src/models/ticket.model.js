@@ -1,6 +1,5 @@
-// src/models/ticket.model.js
 import mongoose from 'mongoose';
-import { v4 as uuidv4 } from 'uuid'; // Usaremos UUID para códigos únicos
+import { v4 as uuidv4 } from 'uuid';
 
 const ticketSchema = new mongoose.Schema({
     code: {
@@ -17,7 +16,7 @@ const ticketSchema = new mongoose.Schema({
         required: true,
     },
     purchaser: {
-        type: String, // En un futuro, podría ser un ObjectId referenciando a un usuario
+        type: String,
         required: true,
     }
 });

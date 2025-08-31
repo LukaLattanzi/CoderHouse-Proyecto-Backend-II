@@ -20,7 +20,7 @@ const cartSchema = new mongoose.Schema({
     }
 });
 
-cartSchema.pre('findOne', function() {
+cartSchema.pre('findOne', function () {
     this.populate('products.product', '-__v');
 });
 

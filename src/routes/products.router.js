@@ -3,7 +3,6 @@ import { ProductModel } from '../models/product.model.js';
 
 const router = Router();
 
-// GET / con paginación, filtros y ordenamiento
 router.get('/', async (req, res) => {
     try {
         const { limit = 10, page = 1, sort, query } = req.query;
@@ -24,7 +23,7 @@ router.get('/', async (req, res) => {
         }
 
         const result = await ProductModel.paginate(searchQuery, options);
-        
+
         const baseUrl = `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}`;
         const prevLink = result.hasPrevPage ? `${baseUrl}?page=${result.prevPage}&limit=${limit}&query=${query || ''}&sort=${sort || ''}` : null;
         const nextLink = result.hasNextPage ? `${baseUrl}?page=${result.nextPage}&limit=${limit}&query=${query || ''}&sort=${sort || ''}` : null;
@@ -51,7 +50,6 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/products/:pid usando Mongoose
 router.get('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;
@@ -65,7 +63,6 @@ router.get('/:pid', async (req, res) => {
     }
 });
 
-// POST /api/products/ usando Mongoose
 router.post('/', async (req, res) => {
     try {
         const productData = req.body;
@@ -76,7 +73,6 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /api/products/:pid usando Mongoose
 router.put('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;
@@ -92,7 +88,6 @@ router.put('/:pid', async (req, res) => {
     }
 });
 
-// DELETE /api/products/:pid usando Mongoose
 router.delete('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;

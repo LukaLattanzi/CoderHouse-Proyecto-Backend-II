@@ -5,7 +5,6 @@ import { TicketModel } from '../models/ticket.model.js';
 
 const router = Router();
 
-// --- OBTENER UN CARRITO ESPECÍFICO ---
 router.get('/:cid', async (req, res) => {
     try {
         const cart = await CartModel.findOne({ _id: req.params.cid }).populate('products.product');
@@ -18,7 +17,6 @@ router.get('/:cid', async (req, res) => {
     }
 });
 
-// --- AGREGAR UN PRODUCTO AL CARRITO ---
 router.post('/:cid/products/:pid', async (req, res) => {
     try {
         const { cid, pid } = req.params;
@@ -47,7 +45,6 @@ router.post('/:cid/products/:pid', async (req, res) => {
     }
 });
 
-// --- FINALIZAR LA COMPRA ---
 router.post('/:cid/purchase', async (req, res) => {
     try {
         const { cid } = req.params;
@@ -62,8 +59,8 @@ router.post('/:cid/purchase', async (req, res) => {
         let totalAmount = 0;
 
         for (const item of cart.products) {
-            if (!item.product) continue; // Salta si el producto es null
-            
+            if (!item.product) continue;
+
             if (item.product.stock >= item.quantity) {
                 productsToPurchase.push(item);
                 totalAmount += item.product.price * item.quantity;
@@ -79,15 +76,15 @@ router.post('/:cid/purchase', async (req, res) => {
 
         const ticket = await TicketModel.create({
             amount: totalAmount,
-            purchaser: 'user@example.com', // Esto vendría de req.session.user.email
+            purchaser: 'user@example.com',
         });
 
         cart.products = productsToKeepInCart;
         await cart.save();
 
-        res.status(200).json({ 
-            status: 'success', 
-            message: 'Compra realizada con éxito!', 
+        res.status(200).json({
+            status: 'success',
+            message: 'Compra realizada con éxito!',
             ticket: ticket,
             productsNotInStock: productsToKeepInCart.map(item => item.product._id)
         });
@@ -98,7 +95,6 @@ router.post('/:cid/purchase', async (req, res) => {
     }
 });
 
-// --- ACTUALIZAR UN CARRITO COMPLETO CON UN ARRAY DE PRODUCTOS ---
 router.put('/:cid', async (req, res) => {
     try {
         const { cid } = req.params;
@@ -107,14 +103,13 @@ router.put('/:cid', async (req, res) => {
 
         const cart = await CartModel.findByIdAndUpdate(cid, { products }, { new: true }).populate('products.product');
         if (!cart) return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
-        
+
         res.status(200).json({ status: 'success', payload: cart });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
     }
 });
 
-// --- ACTUALIZAR LA CANTIDAD DE UN SOLO PRODUCTO ---
 router.put('/:cid/products/:pid', async (req, res) => {
     try {
         const { cid, pid } = req.params;
@@ -122,7 +117,7 @@ router.put('/:cid/products/:pid', async (req, res) => {
         if (typeof quantity !== 'number' || quantity < 1) {
             return res.status(400).json({ status: 'error', message: 'La cantidad es inválida' });
         }
-        
+
         const cart = await CartModel.findOneAndUpdate(
             { _id: cid, 'products.product': pid },
             { $set: { 'products.$.quantity': quantity } },
@@ -137,7 +132,6 @@ router.put('/:cid/products/:pid', async (req, res) => {
     }
 });
 
-// --- ELIMINAR UN PRODUCTO DEL CARRITO ---
 router.delete('/:cid/products/:pid', async (req, res) => {
     try {
         const { cid, pid } = req.params;
@@ -146,7 +140,7 @@ router.delete('/:cid/products/:pid', async (req, res) => {
 
         cart.products = cart.products.filter(item => item.product && item.product.toString() !== pid);
         await cart.save();
-        
+
         const updatedCart = await CartModel.findById(cid).populate('products.product');
         res.status(200).json({ status: 'success', payload: updatedCart });
     } catch (error) {
@@ -154,13 +148,12 @@ router.delete('/:cid/products/:pid', async (req, res) => {
     }
 });
 
-// --- VACIAR EL CARRITO ---
 router.delete('/:cid', async (req, res) => {
     try {
         const { cid } = req.params;
         const cart = await CartModel.findByIdAndUpdate(cid, { products: [] }, { new: true });
         if (!cart) return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
-        
+
         res.status(200).json({ status: 'success', payload: cart });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });

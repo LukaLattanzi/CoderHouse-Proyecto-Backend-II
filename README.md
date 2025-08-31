@@ -1,4 +1,3 @@
-
 # 📦 Entrega Final: Backend Ecommerce
 
 [![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
@@ -49,7 +48,7 @@ Este proyecto cumple con los requisitos de entrega final del bootcamp de backend
 
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/
+   git clone https://github.com/LukaLattanzi/CoderHouse-Proyecto-Backend-II
    cd EntregaFinalMartin
    ```
 2. Instala dependencias:
@@ -73,6 +72,7 @@ Este proyecto cumple con los requisitos de entrega final del bootcamp de backend
 ## 🔧 Endpoints REST
 
 ### Productos
+
 - `GET /api/products?limit=&page=&sort=&query=`
 - `GET /api/products/:pid`
 - `POST /api/products`
@@ -80,6 +80,7 @@ Este proyecto cumple con los requisitos de entrega final del bootcamp de backend
 - `DELETE /api/products/:pid`
 
 ### Carritos
+
 - `POST /api/carts` → Crear nuevo carrito
 - `GET /api/carts/:cid`
 - `POST /api/carts/:cid/product/:pid`
