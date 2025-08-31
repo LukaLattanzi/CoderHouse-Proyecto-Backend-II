@@ -46,16 +46,25 @@
 
             if (response.ok) {
                 resultDiv.innerHTML = `
-                    <div class="alert alert-success">
-                        <h4>¡Compra Exitosa!</h4>
-                        <p><strong>Código del Ticket:</strong> ${data.ticket.code}</p>
-                        <p><strong>Monto Total:</strong> $${data.ticket.amount}</p>
-                        <p>¡Gracias por tu compra!</p>
-                        <hr>
-                        <p class="mb-0">Los productos sin stock permanecen en tu carrito.</p>
+                <div class="alert alert-success">
+                    <h4>¡Compra Exitosa!</h4>
+                    <p><strong>Código del Ticket:</strong> ${data.ticket.code}</p>
+                    <p><strong>Monto Total:</strong> $${data.ticket.amount}</p>
+                    <p>¡Gracias por tu compra!</p>
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <a href="/products" class="btn btn-primary">Seguir Comprando</a>
+                        <button onclick="window.print()" class="btn btn-outline-secondary">Imprimir Ticket</button>
                     </div>
-                `;
+                </div>
+            `;
                 document.getElementById('cart-container').style.display = 'none';
+
+                const cartLinks = document.querySelectorAll('a[href*="/carts/"]');
+                cartLinks.forEach(link => {
+                    link.href = `/carts/${data.newCartId}`;
+                });
+
             } else {
                 resultDiv.innerHTML = `<div class="alert alert-danger">${data.message || 'Error desconocido al procesar la compra.'}</div>`;
                 purchaseBtn.disabled = false;

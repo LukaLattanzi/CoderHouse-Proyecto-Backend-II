@@ -7,9 +7,17 @@
                     <a class="nav-link" href="/products">Productos</a>
                 </li>
             </ul>
-            <a href="/carts/{{user.cartId}}" class="btn btn-outline-light">
-                Carrito 🛒
-            </a>
+            <div class="d-flex align-items-center">
+                {{#if user.name}}
+                <span class="text-light me-3">Hola, {{user.name}}!</span>
+                {{/if}}
+                <a href="/carts/{{user.cartId}}" class="btn btn-outline-light me-2">
+                    Carrito 🛒
+                </a>
+                <a href="/logout" class="btn btn-outline-secondary">
+                    Salir
+                </a>
+            </div>
         </div>
     </div>
 </nav>

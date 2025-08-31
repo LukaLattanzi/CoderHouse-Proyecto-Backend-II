@@ -1,8 +1,11 @@
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.SECRET_KEY;
+const SECRET = process.env.SECRET_KEY || 'fallback-secret-key-para-desarrollo';
+
+console.log('🔑 JWT SECRET cargado:', SECRET ? 'Sí' : 'No');
 
 export function signJwt(payload, expiresIn = '15m') {
+  console.log('🔐 Generando JWT con SECRET:', SECRET ? 'Definido' : 'Undefined');
   return jwt.sign(payload, SECRET, { expiresIn });
 }
 

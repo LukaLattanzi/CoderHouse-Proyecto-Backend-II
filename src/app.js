@@ -25,6 +25,7 @@ import { ProductModel } from './models/product.model.js';
 import { CartModel } from './models/cart.model.js';
 
 await import('./middlewares/passport/passport-jwt.js');
+import { requireAuth } from './middlewares/auth.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -47,7 +48,14 @@ app.use(session({
   saveUninitialized: false,
 }));
 
-app.use(async (req, res, next) => {
+app.use('/api/carts', (req, res, next) => {
+  if (!req.headers.authorization && !req.session.userId) {
+    return res.status(401).json({ status: 'error', message: 'Usuario no autenticado' });
+  }
+  next();
+});
+
+/* app.use(async (req, res, next) => {
   if (!req.session.cartId) {
     try {
       const newCart = await CartModel.create({ products: [] });
@@ -57,7 +65,7 @@ app.use(async (req, res, next) => {
     }
   }
   next();
-});
+}); */
 
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');

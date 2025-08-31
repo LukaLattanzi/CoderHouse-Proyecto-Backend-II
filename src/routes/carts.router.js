@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { CartModel } from '../models/cart.model.js';
 import { ProductModel } from '../models/product.model.js';
 import { TicketModel } from '../models/ticket.model.js';
+import { UserModel } from '../models/user.model.js';
+import passport from 'passport';
 
 const router = Router();
 
@@ -45,11 +47,32 @@ router.post('/:cid/products/:pid', async (req, res) => {
     }
 });
 
-router.post('/:cid/purchase', async (req, res) => {
+const authenticateUser = (req, res, next) => {
+
+    if (req.headers.authorization) {
+        passport.authenticate('jwt', { session: false }, (err, user) => {
+            if (err || !user) {
+                return res.status(401).json({ status: 'error', message: 'Token JWT inválido' });
+            }
+            req.user = user;
+            next();
+        })(req, res, next);
+    }
+    else if (req.session?.userId) {
+        next();
+    }
+    else {
+        return res.status(401).json({ status: 'error', message: 'Usuario no autenticado' });
+    }
+};
+
+router.post('/:cid/purchase', authenticateUser, async (req, res) => {
     try {
         const { cid } = req.params;
-        const cart = await CartModel.findById(cid).populate('products.product');
 
+        const userId = req.user?._id || req.session?.userId;
+
+        const cart = await CartModel.findById(cid).populate('products.product');
         if (!cart) {
             return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
         }
@@ -64,29 +87,51 @@ router.post('/:cid/purchase', async (req, res) => {
             if (item.product.stock >= item.quantity) {
                 productsToPurchase.push(item);
                 totalAmount += item.product.price * item.quantity;
-                await ProductModel.updateOne({ _id: item.product._id }, { $inc: { stock: -item.quantity } });
+                await ProductModel.updateOne(
+                    { _id: item.product._id },
+                    { $inc: { stock: -item.quantity } }
+                );
             } else {
                 productsToKeepInCart.push(item);
             }
         }
 
         if (productsToPurchase.length === 0) {
-            return res.status(400).json({ status: 'error', message: 'No hay productos con stock suficiente para realizar la compra.' });
+            return res.status(400).json({
+                status: 'error',
+                message: 'No hay productos con stock suficiente para realizar la compra.'
+            });
         }
+
+        const user = await UserModel.findById(userId);
+        const purchaserEmail = user?.email || 'user@example.com';
 
         const ticket = await TicketModel.create({
             amount: totalAmount,
-            purchaser: 'user@example.com',
+            purchaser: purchaserEmail,
         });
 
-        cart.products = productsToKeepInCart;
+        const newCart = await CartModel.create({ products: [] });
+        await UserModel.findByIdAndUpdate(userId, { cart: newCart._id });
+
+        if (req.session?.userId) {
+            req.session.cartId = newCart._id.toString();
+        }
+
+        cart.products = [];
         await cart.save();
 
         res.status(200).json({
             status: 'success',
             message: 'Compra realizada con éxito!',
             ticket: ticket,
-            productsNotInStock: productsToKeepInCart.map(item => item.product._id)
+            newCartId: newCart._id,
+            productsNotInStock: productsToKeepInCart.map(item => ({
+                productId: item.product._id,
+                title: item.product.title,
+                requestedQuantity: item.quantity,
+                availableStock: item.product.stock
+            }))
         });
 
     } catch (error) {

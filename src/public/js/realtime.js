@@ -18,7 +18,6 @@ form.addEventListener('submit', e => {
   const formData = new FormData(form);
   const product = Object.fromEntries(formData.entries());
 
-  // Validación básica
   const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
   const emptyFields = requiredFields.filter(field => !product[field]);
 
