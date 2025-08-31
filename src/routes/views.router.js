@@ -35,6 +35,18 @@ router.get('/products', requireAuth, async (req, res) => {
 
         const user = await UserModel.findById(req.session.userId).populate('cart').lean();
 
+        if (!user) {
+            console.error('Usuario no encontrado en sesión:', req.session.userId);
+            return res.redirect('/login');
+        }
+
+        if (!user.cart) {
+            console.error('Usuario sin carrito asignado:', user._id);
+            const newCart = await CartModel.create({ products: [] });
+            await UserModel.findByIdAndUpdate(user._id, { cart: newCart._id });
+            user.cart = newCart;
+        }
+
         res.render('products', {
             title: 'Productos',
             products: result.docs,
@@ -67,6 +79,18 @@ router.get('/products/:pid', requireAuth, async (req, res) => {
 
         const user = await UserModel.findById(req.session.userId).populate('cart').lean();
 
+        if (!user) {
+            console.error('Usuario no encontrado en sesión:', req.session.userId);
+            return res.redirect('/login');
+        }
+
+        if (!user.cart) {
+            console.error('Usuario sin carrito asignado:', user._id);
+            const newCart = await CartModel.create({ products: [] });
+            await UserModel.findByIdAndUpdate(user._id, { cart: newCart._id });
+            user.cart = newCart;
+        }
+
         res.render('product-detail', {
             title: product.title,
             product,
@@ -85,6 +109,16 @@ router.get('/carts/:cid', requireAuth, async (req, res) => {
     try {
         const { cid } = req.params;
         const user = await UserModel.findById(req.session.userId).populate('cart').lean();
+
+        if (!user) {
+            console.error('Usuario no encontrado en sesión:', req.session.userId);
+            return res.redirect('/login');
+        }
+
+        if (!user.cart) {
+            console.error('Usuario sin carrito asignado:', user._id);
+            return res.status(403).render('error', { message: 'Carrito no encontrado para el usuario' });
+        }
 
         if (user.cart._id.toString() !== cid) {
             return res.status(403).render('error', { message: 'Acceso denegado al carrito' });

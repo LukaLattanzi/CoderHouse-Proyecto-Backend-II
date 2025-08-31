@@ -22,23 +22,36 @@ router.get('/:cid', async (req, res) => {
 router.post('/:cid/products/:pid', async (req, res) => {
     try {
         const { cid, pid } = req.params;
-        const cart = await CartModel.findById(cid);
 
+        const product = await ProductModel.findById(pid);
+        if (!product) {
+            return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
+        }
+
+        const cart = await CartModel.findById(cid);
         if (!cart) {
             return res.status(404).json({ status: 'error', message: 'Carrito no encontrado' });
         }
+
+        console.log('🛒 Agregando producto al carrito:', { cartId: cid, productId: pid });
 
         const productIndex = cart.products.findIndex(item => item.product && item.product.toString() === pid);
 
         if (productIndex > -1) {
             cart.products[productIndex].quantity += 1;
+            console.log('📈 Incrementando cantidad del producto existente');
         } else {
             cart.products = cart.products.filter(item => item.product !== null);
             cart.products.push({ product: pid, quantity: 1 });
+            console.log('🆕 Agregando nuevo producto al carrito');
         }
 
         await cart.save();
+        console.log('💾 Carrito guardado en BD');
+
         const updatedCart = await CartModel.findById(cid).populate('products.product');
+        console.log('✅ Carrito actualizado:', updatedCart.products.length, 'productos');
+
         res.status(200).json({ status: 'success', payload: updatedCart });
 
     } catch (error) {
@@ -106,10 +119,27 @@ router.post('/:cid/purchase', authenticateUser, async (req, res) => {
         const user = await UserModel.findById(userId);
         const purchaserEmail = user?.email || 'user@example.com';
 
+        const ticketProducts = productsToPurchase.map(item => ({
+            product: item.product._id,
+            quantity: item.quantity,
+            price: item.product.price
+        }));
+
+        console.log('🎫 Creando ticket con:', {
+            amount: totalAmount,
+            purchaser: purchaserEmail,
+            cart: cid,
+            products: ticketProducts.length
+        });
+
         const ticket = await TicketModel.create({
             amount: totalAmount,
             purchaser: purchaserEmail,
+            cart: cid,
+            products: ticketProducts
         });
+
+        console.log('✅ Ticket creado:', ticket.code);
 
         const newCart = await CartModel.create({ products: [] });
         await UserModel.findByIdAndUpdate(userId, { cart: newCart._id });
@@ -124,7 +154,14 @@ router.post('/:cid/purchase', authenticateUser, async (req, res) => {
         res.status(200).json({
             status: 'success',
             message: 'Compra realizada con éxito!',
-            ticket: ticket,
+            ticket: {
+                code: ticket.code,
+                amount: ticket.amount,
+                purchaser: ticket.purchaser,
+                purchase_datetime: ticket.purchase_datetime,
+                cart: ticket.cart,
+                products: ticketProducts
+            },
             newCartId: newCart._id,
             productsNotInStock: productsToKeepInCart.map(item => ({
                 productId: item.product._id,

@@ -64,6 +64,7 @@ router.post('/web-register', async (req, res) => {
             });
         }
 
+        // Crear carrito y usuario
         const cart = await CartModel.create({ products: [] });
         const user = await UserModel.create({
             first_name,
@@ -188,7 +189,6 @@ router.get('/current', async (req, res) => {
             return res.status(401).json({ status: 'error', message: 'Token inválido' });
         }
 
-        // Buscar usuario en BD
         const user = await UserModel.findById(decoded._id).populate('cart').lean();
         if (!user) {
             return res.status(401).json({ status: 'error', message: 'Usuario no encontrado' });
