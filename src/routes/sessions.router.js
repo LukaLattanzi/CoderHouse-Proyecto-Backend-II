@@ -172,92 +172,41 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.get('/current', async (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
+router.get('/current', (req, res, next) => {
+    console.log('🔍 /current - Iniciando autenticación con Passport');
+    console.log('📋 /current - Headers:', req.headers.authorization ? 'Authorization presente' : 'Authorization faltante');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ status: 'error', message: 'Token requerido' });
+    passport.authenticate('jwt', { session: false }, (err, user, info) => {
+        console.log('🎯 /current - Resultado de Passport:', {
+            error: err ? err.message : null,
+            userFound: !!user,
+            info: info
+        });
+
+        if (err) {
+            console.error('💥 /current - Error en Passport:', err);
+            return res.status(500).json({
+                status: 'error',
+                message: 'Error interno de autenticación',
+                details: err.message
+            });
         }
 
-        const token = authHeader.split(' ')[1];
-
-        const { verifyJwt } = await import('../utils/jwt.js');
-        const decoded = verifyJwt(token);
-
-        if (!decoded) {
-            return res.status(401).json({ status: 'error', message: 'Token inválido' });
-        }
-
-        const user = await UserModel.findById(decoded._id).populate('cart').lean();
         if (!user) {
-            return res.status(401).json({ status: 'error', message: 'Usuario no encontrado' });
+            console.log('❌ /current - Passport no autenticó el usuario');
+            return res.status(401).json({
+                status: 'error',
+                message: 'Token inválido o expirado',
+                info: info?.message || 'Usuario no encontrado'
+            });
         }
 
-        const { password, ...safeUser } = user;
-        return res.json({ status: 'success', user: safeUser });
-
-    } catch (error) {
-        return res.status(500).json({ status: 'error', message: 'Error interno' });
-    }
-});
-
-router.get('/current-manual', async (req, res) => {
-    try {
-        console.log('🔍 Endpoint /current-manual alcanzado');
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ status: 'error', message: 'Token requerido' });
-        }
-
-        const token = authHeader.split(' ')[1];
-        console.log('🎯 Token extraído:', token);
-
-        const { verifyJwt } = await import('../utils/jwt.js');
-        const decoded = verifyJwt(token);
-
-        if (!decoded) {
-            return res.status(401).json({ status: 'error', message: 'Token inválido' });
-        }
-
-        console.log('✅ Token decodificado:', decoded);
-
-        const user = await UserModel.findById(decoded._id).populate('cart').lean();
-        if (!user) {
-            return res.status(401).json({ status: 'error', message: 'Usuario no encontrado' });
-        }
-
-        const { password, ...safeUser } = user;
-        return res.json({ status: 'success', user: safeUser });
-
-    } catch (error) {
-        console.error('💥 Error en current-manual:', error);
-        return res.status(500).json({ status: 'error', message: 'Error interno' });
-    }
-});
-
-router.get('/debug-jwt', (req, res) => {
-    console.log('🔍 Headers recibidos:', req.headers);
-    console.log('🔑 Authorization:', req.headers.authorization);
-
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.json({ error: 'No Authorization header' });
-    }
-
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-        return res.json({ error: 'No token found' });
-    }
-
-    import('../utils/jwt.js').then(({ verifyJwt }) => {
-        const decoded = verifyJwt(token);
-        if (!decoded) {
-            return res.json({ error: 'Token inválido' });
-        }
-        return res.json({ success: true, decoded, message: 'Token válido' });
-    });
+        console.log('✅ /current - Usuario autenticado exitosamente:', user.email);
+        return res.json({
+            status: 'success',
+            payload: user
+        });
+    })(req, res, next);
 });
 
 router.get('/test', (req, res) => {

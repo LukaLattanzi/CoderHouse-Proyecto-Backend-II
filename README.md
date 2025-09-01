@@ -13,11 +13,11 @@
 
 ## 📘 Descripción
 
-Aplicación backend completa de e-commerce desarrollada con Node.js, Express y MongoDB. Incluye sistema de autenticación dual (JWT para APIs + Sessions para web), gestión completa de productos y carritos, sistema de compras con tickets, vistas dinámicas con Handlebars y WebSockets para actualizaciones en tiempo real.
+Aplicación backend completa de e-commerce desarrollada con Node.js, Express y MongoDB. Incluye sistema de autenticación dual (**Passport JWT** para APIs + Sessions para web), gestión completa de productos y carritos, sistema de compras con tickets, vistas dinámicas con Handlebars y WebSockets para actualizaciones en tiempo real.
 
 **Características principales:**
 
-- 🔐 **Doble autenticación**: JWT para APIs y Sessions para navegador web
+- 🔐 **Autenticación profesional**: Passport JWT para APIs y Sessions para navegador web
 - 🛍️ **E-commerce completo**: Productos, carritos, compras y tickets
 - 📱 **Dual Frontend**: API REST + Vistas web con Handlebars
 - 🔄 **Tiempo real**: WebSockets para actualizaciones instantáneas
@@ -36,10 +36,10 @@ Aplicación backend completa de e-commerce desarrollada con Node.js, Express y M
 
 ### **Autenticación y Seguridad**
 
-- **JWT** (jsonwebtoken v9.0.2) - Tokens para autenticación API
-- **Express Session** (v1.18.2) - Sesiones persistentes para web
-- **Passport JWT** (v4.0.1) - Estrategia de autenticación
-- **bcrypt** (v5.1.1) - Hash de contraseñas
+- **Passport JWT** (v4.0.1) - Estrategia principal de autenticación API
+- **JWT** (jsonwebtoken v9.0.2) - Generación y verificación de tokens
+- **Express Session** (v1.18.2) - Sesiones persistentes para navegador web
+- **bcrypt** (v5.1.1) - Hash seguro de contraseñas
 - **connect-mongo** (v5.1.0) - Store de sesiones en MongoDB
 
 ### **Frontend y Vistas**
@@ -63,10 +63,11 @@ Aplicación backend completa de e-commerce desarrollada con Node.js, Express y M
 
 #### **API Authentication (JWT)**
 
-- Registro y login con tokens JWT
+- Autenticación robusta con **Passport JWT**
 - Headers: `Authorization: Bearer <token>`
-- Para Postman, aplicaciones móviles, etc.
+- Validación automática y segura de tokens
 - Tokens con expiración configurable
+- Para Postman, aplicaciones móviles, etc.
 
 #### **Web Authentication (Sessions)**
 
@@ -296,11 +297,27 @@ Content-Type: application/x-www-form-urlencoded
 email=juan@email.com&password=password123
 ```
 
-#### **Usuario Actual**
+#### **Usuario Actual (Passport JWT)**
 
 ```http
 GET /api/sessions/current
 Authorization: Bearer <JWT_TOKEN>
+
+# Respuesta exitosa:
+{
+  "status": "success",
+  "payload": {
+    "_id": "usuario_id",
+    "first_name": "Juan",
+    "last_name": "Pérez",
+    "email": "juan@email.com",
+    "role": "user",
+    "cart": {
+      "_id": "carrito_id",
+      "products": [...]
+    }
+  }
+}
 ```
 
 #### **CRUD de Usuarios**
@@ -432,26 +449,31 @@ Authorization: Bearer <JWT_TOKEN>
 # - productsNotInStock: productos sin stock suficiente
 ```
 
-### **🔍 Endpoints de Debug**
-
-#### **Verificar JWT Manual**
-
-```http
-GET /api/sessions/current-manual
-Authorization: Bearer <JWT_TOKEN>
-```
-
-#### **Debug de JWT**
-
-```http
-GET /api/sessions/debug-jwt
-Authorization: Bearer <JWT_TOKEN>
-```
+### **🔍 Endpoints de Debug y Testing**
 
 #### **Test de Conectividad**
 
 ```http
 GET /api/sessions/test
+
+# Response: {"status":"success","message":"Sessions router funcionando"}
+```
+
+#### **Generar Token de Prueba**
+
+```http
+GET /api/sessions/test-token
+
+# Response: Token válido para testing con instrucciones de uso
+```
+
+#### **Debug de Headers JWT**
+
+```http
+GET /api/sessions/debug-jwt
+Authorization: Bearer <JWT_TOKEN>
+
+# Verifica formato de headers y estructura del token
 ```
 
 ### **📊 Formatos de Respuesta**
@@ -527,13 +549,25 @@ curl -X POST http://localhost:8080/api/sessions/login \
 # Response: {"status":"success","token":"eyJhbGciOiJIUzI1NiIs..."}
 ```
 
-#### **3. Verificar Token**
+#### **3. Verificar Token con Passport**
 
 ```bash
 export JWT_TOKEN="eyJhbGciOiJIUzI1NiIs..."
 
 curl -X GET http://localhost:8080/api/sessions/current \
   -H "Authorization: Bearer $JWT_TOKEN"
+
+# Response exitosa con Passport JWT:
+# {
+#   "status": "success",
+#   "payload": {
+#     "_id": "user_id",
+#     "first_name": "María",
+#     "last_name": "García",
+#     "email": "maria@email.com",
+#     "cart": { "_id": "cart_id", "products": [...] }
+#   }
+# }
 ```
 
 ### **🌐 Navegación Web**
@@ -746,7 +780,66 @@ http://localhost:8080/logout         → Cerrar sesión
 
 ---
 
-## 📝 Licencia
+## � Implementación de Passport JWT
+
+### **🛡️ Autenticación Profesional**
+
+Este proyecto utiliza **Passport JWT de manera obligatoria** para toda la autenticación de API, siguiendo las mejores prácticas de seguridad:
+
+#### **Configuración Robusta**
+
+```javascript
+// Estrategia JWT configurada con:
+const opts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.SECRET_KEY,
+};
+
+// Verificación automática en cada request
+passport.use(
+  "jwt",
+  new JwtStrategy(opts, async (jwt_payload, done) => {
+    const user = await UserModel.findById(jwt_payload._id).populate("cart");
+    return user ? done(null, user) : done(null, false);
+  })
+);
+```
+
+#### **Ventajas de Esta Implementación**
+
+- ✅ **Seguridad máxima**: Validación automática por Passport
+- ✅ **Escalabilidad**: Manejo profesional de tokens
+- ✅ **Mantenibilidad**: Código limpio y estandarizado
+- ✅ **Debugging**: Logs detallados para troubleshooting
+- ✅ **Flexibilidad**: Fácil extensión para roles y permisos
+
+#### **Flujo de Autenticación**
+
+1. **Login**: Genera JWT con payload completo del usuario
+2. **Request**: Cliente envía `Authorization: Bearer <token>`
+3. **Passport**: Extrae, valida y decodifica automáticamente
+4. **Database**: Verifica usuario existe y está activo
+5. **Response**: `req.user` disponible en controladores
+
+#### **Manejo de Errores**
+
+```javascript
+// Respuestas estándar para diferentes escenarios:
+- Token faltante/inválido: 401 Unauthorized
+- Usuario no encontrado: 401 Unauthorized
+- Error de servidor: 500 Internal Server Error
+- Autenticación exitosa: 200 + payload completo
+```
+
+#### **Testing y Debug**
+
+- `GET /api/sessions/test-token` - Genera token válido para pruebas
+- `GET /api/sessions/debug-jwt` - Verifica formato de headers
+- `GET /api/sessions/current` - Endpoint principal protegido
+
+---
+
+## �📝 Licencia
 
 **ISC License** - Consulta el archivo `package.json` para más detalles.
 
