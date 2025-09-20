@@ -4,8 +4,11 @@ import { UserModel } from '../models/user.model.js';
 import { CartModel } from '../models/cart.model.js';
 import { isValidPassword, hashPassword } from '../utils/crypto.js';
 import { signJwt } from '../utils/jwt.js';
+import { UserCurrentDTO } from '../dto/UserDTO.js';
+import { PasswordResetService } from '../services/PasswordResetService.js';
 
 const router = Router();
+const passwordResetService = new PasswordResetService();
 
 router.post('/web-login', async (req, res) => {
     try {
@@ -64,7 +67,6 @@ router.post('/web-register', async (req, res) => {
             });
         }
 
-        // Crear carrito y usuario
         const cart = await CartModel.create({ products: [] });
         const user = await UserModel.create({
             first_name,
@@ -204,13 +206,93 @@ router.get('/current', (req, res, next) => {
         console.log('✅ /current - Usuario autenticado exitosamente:', user.email);
         return res.json({
             status: 'success',
-            payload: user
+            payload: UserCurrentDTO.create(user)
         });
     })(req, res, next);
 });
 
 router.get('/test', (req, res) => {
     res.json({ status: 'success', message: 'Sessions router funcionando' });
+});
+
+router.post('/request-password-reset', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Email es requerido'
+            });
+        }
+
+        const result = await passwordResetService.requestPasswordReset(email);
+
+        return res.json({
+            status: 'success',
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error en request-password-reset:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+router.get('/validate-reset-token/:token', async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        const validation = await passwordResetService.validateResetToken(token);
+
+        return res.json({
+            status: 'success',
+            valid: validation.valid,
+            email: validation.email
+        });
+    } catch (error) {
+        console.error('Error validating reset token:', error);
+        return res.status(400).json({
+            status: 'error',
+            message: error.message,
+            valid: false
+        });
+    }
+});
+
+router.post('/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Token y nueva contraseña son requeridos'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'La contraseña debe tener al menos 6 caracteres'
+            });
+        }
+
+        const result = await passwordResetService.resetPassword(token, newPassword);
+
+        return res.json({
+            status: 'success',
+            message: result.message
+        });
+    } catch (error) {
+        console.error('Error en reset-password:', error);
+        return res.status(400).json({
+            status: 'error',
+            message: error.message
+        });
+    }
 });
 
 export default router;

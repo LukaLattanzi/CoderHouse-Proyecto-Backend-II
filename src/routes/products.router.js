@@ -1,7 +1,17 @@
 import { Router } from 'express';
 import { ProductModel } from '../models/product.model.js';
+import { ProductRepository } from '../repositories/ProductRepository.js';
+import { ProductDTO, ProductListDTO } from '../dto/ProductDTO.js';
+import {
+    authenticateJWT,
+    authorizeProductManagement
+} from '../middlewares/authorization.js';
 
 const router = Router();
+const productRepository = new ProductRepository();
+
+router.use(authenticateJWT);
+router.use(authorizeProductManagement);
 
 router.get('/', async (req, res) => {
     try {
@@ -10,19 +20,12 @@ router.get('/', async (req, res) => {
         const options = {
             page: parseInt(page, 10),
             limit: parseInt(limit, 10),
-            lean: true
+            sort: sort ? { price: sort === 'asc' ? 1 : -1 } : undefined
         };
 
-        if (sort) {
-            options.sort = { price: sort === 'asc' ? 1 : -1 };
-        }
+        const searchQuery = query ? { category: query } : {};
 
-        const searchQuery = {};
-        if (query) {
-            searchQuery.category = query;
-        }
-
-        const result = await ProductModel.paginate(searchQuery, options);
+        const result = await productRepository.getAllProducts(searchQuery, options);
 
         const baseUrl = `${req.protocol}://${req.get('host')}${req.originalUrl.split('?')[0]}`;
         const prevLink = result.hasPrevPage ? `${baseUrl}?page=${result.prevPage}&limit=${limit}&query=${query || ''}&sort=${sort || ''}` : null;
@@ -30,7 +33,7 @@ router.get('/', async (req, res) => {
 
         res.status(200).json({
             status: 'success',
-            payload: result.docs,
+            payload: ProductListDTO.createArray(result.docs),
             totalPages: result.totalPages,
             prevPage: result.prevPage,
             nextPage: result.nextPage,
@@ -38,14 +41,20 @@ router.get('/', async (req, res) => {
             hasPrevPage: result.hasPrevPage,
             hasNextPage: result.hasNextPage,
             prevLink: prevLink,
-            nextLink: nextLink
+            nextLink: nextLink,
+            user: req.user ? {
+                id: req.user._id,
+                role: req.user.role,
+                email: req.user.email
+            } : null
         });
 
     } catch (error) {
         console.error("Error al obtener productos:", error);
         res.status(500).json({
             status: 'error',
-            message: 'Error al obtener los productos.'
+            message: 'Error al obtener los productos.',
+            details: error.message
         });
     }
 });
@@ -53,23 +62,47 @@ router.get('/', async (req, res) => {
 router.get('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;
-        const product = await ProductModel.findById(pid);
-        if (!product) {
-            return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
-        }
-        res.status(200).json({ status: 'success', payload: product });
+        const product = await productRepository.getProductById(pid);
+
+        res.status(200).json({
+            status: 'success',
+            payload: ProductDTO.create(product)
+        });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        console.error("Error al obtener producto:", error);
+        const statusCode = error.message.includes('not found') ? 404 : 500;
+        res.status(statusCode).json({
+            status: 'error',
+            message: error.message
+        });
     }
 });
 
 router.post('/', async (req, res) => {
     try {
         const productData = req.body;
-        const newProduct = await ProductModel.create(productData);
-        res.status(201).json({ status: 'success', payload: newProduct });
+
+        if (!productData.title || !productData.description || !productData.code ||
+            productData.price === undefined || productData.stock === undefined) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Campos requeridos: title, description, code, price, stock'
+            });
+        }
+
+        const newProduct = await productRepository.createProduct(productData);
+
+        res.status(201).json({
+            status: 'success',
+            payload: ProductDTO.create(newProduct),
+            message: 'Producto creado exitosamente'
+        });
     } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
+        console.error("Error al crear producto:", error);
+        res.status(400).json({
+            status: 'error',
+            message: error.message
+        });
     }
 });
 
@@ -78,26 +111,41 @@ router.put('/:pid', async (req, res) => {
         const { pid } = req.params;
         const updates = req.body;
 
-        const updatedProduct = await ProductModel.findByIdAndUpdate(pid, updates, { new: true });
-        if (!updatedProduct) {
-            return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
-        }
-        res.status(200).json({ status: 'success', payload: updatedProduct });
+        delete updates._id;
+
+        const updatedProduct = await productRepository.updateProduct(pid, updates);
+
+        res.status(200).json({
+            status: 'success',
+            payload: ProductDTO.create(updatedProduct),
+            message: 'Producto actualizado exitosamente'
+        });
     } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
+        console.error("Error al actualizar producto:", error);
+        const statusCode = error.message.includes('not found') ? 404 : 400;
+        res.status(statusCode).json({
+            status: 'error',
+            message: error.message
+        });
     }
 });
 
 router.delete('/:pid', async (req, res) => {
     try {
         const { pid } = req.params;
-        const deletedProduct = await ProductModel.findByIdAndDelete(pid);
-        if (!deletedProduct) {
-            return res.status(404).json({ status: 'error', message: 'Producto no encontrado' });
-        }
-        res.status(200).json({ status: 'success', message: 'Producto eliminado correctamente' });
+        await productRepository.deleteProduct(pid);
+
+        res.status(200).json({
+            status: 'success',
+            message: 'Producto eliminado exitosamente'
+        });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        console.error("Error al eliminar producto:", error);
+        const statusCode = error.message.includes('not found') ? 404 : 500;
+        res.status(statusCode).json({
+            status: 'error',
+            message: error.message
+        });
     }
 });
 

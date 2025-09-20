@@ -10,7 +10,9 @@
                     <div class="alert alert-danger">{{error}}</div>
                     {{/if}}
 
-                    <form action="/api/sessions/web-login" method="POST">
+                    <div id="loginError" class="alert alert-danger d-none"></div>
+
+                    <form id="loginForm">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required>
@@ -19,14 +21,83 @@
                             <label for="password" class="form-label">Contraseña</label>
                             <input type="password" class="form-control" id="password" name="password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Iniciar Sesión</button>
+                        <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+                            <span id="loginSpinner" class="spinner-border spinner-border-sm d-none me-2"></span>
+                            Iniciar Sesión
+                        </button>
                     </form>
 
                     <div class="text-center mt-3">
                         <p>¿No tienes cuenta? <a href="/register">Crear cuenta</a></p>
+                        <p><a href="/request-password-reset">¿Olvidaste tu contraseña?</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const loginBtn = document.getElementById('loginBtn');
+    const loginSpinner = document.getElementById('loginSpinner');
+    const loginError = document.getElementById('loginError');
+    
+    // Mostrar spinner y deshabilitar botón
+    loginSpinner.classList.remove('d-none');
+    loginBtn.disabled = true;
+    loginError.classList.add('d-none');
+    
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+    
+    try {
+        const response = await fetch('/api/sessions/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.status === 'success') {
+            // Guardar token en localStorage
+            localStorage.setItem('jwt_token', data.token);
+            
+            // Establecer cookie inmediatamente para el middleware híbrido
+            document.cookie = `jwt_token=${data.token}; path=/; SameSite=Lax`;
+            
+            // Mostrar mensaje de éxito
+            if (typeof Toastify !== 'undefined') {
+                Toastify({
+                    text: "Inicio de sesión exitoso",
+                    duration: 2000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+                }).showToast();
+            }
+            
+            // Redirigir a productos inmediatamente
+            window.location.href = '/products';
+        } else {
+            // Mostrar error
+            loginError.textContent = data.message || 'Error en el inicio de sesión';
+            loginError.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        loginError.textContent = 'Error de conexión. Por favor, intenta de nuevo.';
+        loginError.classList.remove('d-none');
+    } finally {
+        // Ocultar spinner y habilitar botón
+        loginSpinner.classList.add('d-none');
+        loginBtn.disabled = false;
+    }
+});
+</script>

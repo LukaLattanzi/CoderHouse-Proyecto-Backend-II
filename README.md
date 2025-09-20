@@ -1,862 +1,245 @@
-# � Backend E-commerce - CoderHouse Proyecto Final
+# E-commerce Backend - Entrega Final
 
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-5.x-brightgreen.svg)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-blue.svg)](https://www.mongodb.com/)
-[![Mongoose](https://img.shields.io/badge/Mongoose-8.x-red.svg)](https://mongoosejs.com/)
-[![Handlebars](https://img.shields.io/badge/Handlebars-Express-orange.svg)](https://handlebarsjs.com/)
-[![Socket.io](https://img.shields.io/badge/Socket.io-4.x-blue.svg)](https://socket.io/)
-[![JWT](https://img.shields.io/badge/JWT-Auth-yellow.svg)](https://jwt.io/)
-[![License](https://img.shields.io/badge/License-ISC-lightgrey.svg)]()
+## Descripción
 
----
+Backend completo de un e-commerce desarrollado con Node.js, Express y MongoDB, implementando patrones de diseño avanzados, sistema de autenticación/autorización robusto y lógica de negocio profesional.
 
-## 📘 Descripción
+## Características Implementadas
 
-Aplicación backend completa de e-commerce desarrollada con Node.js, Express y MongoDB. Incluye sistema de autenticación dual (**Passport JWT** para APIs + Sessions para web), gestión completa de productos y carritos, sistema de compras con tickets, vistas dinámicas con Handlebars y WebSockets para actualizaciones en tiempo real.
+### 🏗️ Arquitectura Profesional
 
-**Características principales:**
+- **Patrón Repository**: Separación clara entre lógica de negocio y acceso a datos
+- **DAOs (Data Access Objects)**: Capa de abstracción para operaciones de base de datos
+- **DTOs (Data Transfer Objects)**: Transferencia segura de datos sin exponer información sensible
+- **Middleware de autorización**: Control granular de acceso por roles
 
-- 🔐 **Autenticación profesional**: Passport JWT para APIs y Sessions para navegador web
-- 🛍️ **E-commerce completo**: Productos, carritos, compras y tickets
-- 📱 **Dual Frontend**: API REST + Vistas web con Handlebars
-- 🔄 **Tiempo real**: WebSockets para actualizaciones instantáneas
-- 🗄️ **Base de datos**: MongoDB con Mongoose y paginación avanzada
+### 🔐 Sistema de Autenticación y Autorización
 
----
+- **JWT Authentication**: Tokens seguros con expiración
+- **Roles de usuario**: Admin y User con permisos diferenciados
+- **Middleware de autorización**: Protección de endpoints por roles
+- **Ruta `/current` segura**: Solo información no sensible del usuario
 
-## 🚀 Stack Tecnológico
+### 📧 Sistema de Recuperación de Contraseñas
 
-### **Backend Core**
+- **Envío de emails**: Integración con nodemailer
+- **Tokens de reset**: Enlaces con expiración de 1 hora
+- **Validación de contraseñas**: Evita reutilizar la contraseña anterior
+- **Vistas responsivas**: Formularios para solicitar y restablecer contraseñas
 
-- **Node.js** (v18+) - Runtime de JavaScript
-- **Express** (v5.1.0) - Framework web minimalista
-- **MongoDB Atlas** - Base de datos NoSQL en la nube
-- **Mongoose** (v8.16.4) - ODM con esquemas y validaciones
+### 🛒 Lógica de Compra Robusta
 
-### **Autenticación y Seguridad**
+- **Verificación de stock**: Control en tiempo real de inventario
+- **Compras parciales**: Manejo de productos sin stock suficiente
+- **Generación de tickets**: Documentos completos de compra
+- **Actualización automática**: Stock se reduce tras compra exitosa
 
-- **Passport JWT** (v4.0.1) - Estrategia principal de autenticación API
-- **JWT** (jsonwebtoken v9.0.2) - Generación y verificación de tokens
-- **Express Session** (v1.18.2) - Sesiones persistentes para navegador web
-- **bcrypt** (v5.1.1) - Hash seguro de contraseñas
-- **connect-mongo** (v5.1.0) - Store de sesiones en MongoDB
+### 🎫 Sistema de Tickets
 
-### **Frontend y Vistas**
+- **Modelo completo**: Código único, fecha, comprador, productos y total
+- **Control de acceso**: Usuarios ven solo sus tickets, admins ven todos
+- **Reportes de ventas**: Estadísticas y análisis para administradores
+- **Historial detallado**: Productos, cantidades y precios al momento de compra
 
-- **Handlebars** (v8.0.3) - Motor de plantillas dinámicas
-- **Socket.io** (v4.8.1) - WebSockets bidireccionales
-- **CSS** personalizado para estilos
+## Estructura del Proyecto
 
-### **Utilidades**
-
-- **mongoose-paginate-v2** (v1.9.1) - Paginación avanzada
-- **UUID** (v11.1.0) - Generación de IDs únicos para tickets
-- **dotenv** (v17.2.0) - Variables de entorno
-- **nodemon** (v3.1.10) - Desarrollo con hot reload
-
----
-
-## 🛠 Características Principales
-
-### 🔐 **Sistema de Autenticación Dual**
-
-#### **API Authentication (JWT)**
-
-- Autenticación robusta con **Passport JWT**
-- Headers: `Authorization: Bearer <token>`
-- Validación automática y segura de tokens
-- Tokens con expiración configurable
-- Para Postman, aplicaciones móviles, etc.
-
-#### **Web Authentication (Sessions)**
-
-- Sesiones persistentes en MongoDB (TTL: 14 días)
-- Cookies automáticas para navegadores
-- Login/logout con formularios HTML
-- Redirecciones automáticas
-
-### 🛍️ **E-commerce Completo**
-
-#### **Gestión de Productos**
-
-- CRUD completo con validaciones
-- Paginación avanzada (`?limit=10&page=1`)
-- Filtrado por categoría (`?query=electronics`)
-- Ordenamiento por precio (`?sort=asc|desc`)
-- Control de stock automático
-
-#### **Sistema de Carritos**
-
-- Carritos únicos por usuario
-- Agregar/eliminar productos
-- Actualización de cantidades
-- Auto-creación de carritos para nuevos usuarios
-- Persistencia entre sesiones
-
-#### **Sistema de Compras**
-
-- Verificación de stock automática
-- Generación de tickets únicos (UUID)
-- Actualización de inventario
-- Creación de carrito nuevo post-compra
-- Historial completo de transacciones
-
-### 📊 **Modelos de Datos**
-
-#### **Users**
-
-```javascript
-{
-  first_name: String,
-  last_name: String,
-  email: String (unique),
-  age: Number,
-  password: String (hashed),
-  role: String (default: "user"),
-  cart: ObjectId (ref: Cart)
-}
+```
+src/
+├── dao/                    # Data Access Objects
+│   ├── UserDAO.js
+│   ├── ProductDAO.js
+│   ├── CartDAO.js
+│   └── TicketDAO.js
+├── dto/                    # Data Transfer Objects
+│   ├── UserDTO.js
+│   ├── ProductDTO.js
+│   ├── CartDTO.js
+│   └── TicketDTO.js
+├── repositories/           # Patrón Repository
+│   ├── UserRepository.js
+│   ├── ProductRepository.js
+│   ├── CartRepository.js
+│   └── TicketRepository.js
+├── services/              # Lógica de negocio
+│   ├── EmailService.js
+│   └── PasswordResetService.js
+├── middlewares/           # Middleware personalizado
+│   ├── auth.js
+│   └── authorization.js
+├── routes/               # Rutas de la API
+│   ├── products.router.js
+│   ├── carts.router.js
+│   ├── sessions.router.js
+│   ├── tickets.router.js
+│   └── views.router.js
+├── models/               # Modelos de MongoDB
+├── views/                # Vistas Handlebars
+└── utils/                # Utilidades
 ```
 
-#### **Products**
+## Instalación y Configuración
 
-```javascript
-{
-  title: String,
-  description: String,
-  code: String (unique),
-  price: Number,
-  status: Boolean,
-  stock: Number,
-  category: String,
-  thumbnails: [String]
-}
-```
-
-#### **Carts**
-
-```javascript
-{
-  products: [{
-    product: ObjectId (ref: Product),
-    quantity: Number
-  }]
-}
-```
-
-#### **Tickets**
-
-```javascript
-{
-  code: String (UUID, unique),
-  purchase_datetime: Date,
-  amount: Number,
-  purchaser: String (email),
-  cart: ObjectId (ref: Cart),
-  products: [{
-    product: ObjectId (ref: Product),
-    quantity: Number,
-    price: Number
-  }]
-}
-```
-
-### 🌐 **Frontend Web Completo**
-
-#### **Vistas Disponibles**
-
-- **`/`** → Redirección a productos (autenticado) o login
-- **`/login`** → Formulario de inicio de sesión
-- **`/register`** → Formulario de registro
-- **`/products`** → Listado paginado con filtros y ordenamiento
-- **`/products/:pid`** → Detalle del producto con "Agregar al carrito"
-- **`/carts/:cid`** → Vista del carrito con tabla de productos
-- **`/logout`** → Cerrar sesión y limpiar cookies
-
-#### **Características de las Vistas**
-
-- Navegación intuitiva con navbar
-- Paginación visual (Anterior/Siguiente)
-- Formularios reactivos con validación
-- Mensajes de error personalizados
-- Responsive design básico
-
-### ⚡ **WebSockets (Socket.io)**
-
-- Conexión bidireccional en tiempo real
-- Actualizaciones instantáneas de productos
-- Notificaciones de stock y cambios
-- Integración con vistas dinámicas
-
----
-
-## ⚙️ Instalación y Configuración
-
-### **📥 Clonación del Repositorio**
+1. **Clonar el repositorio**
 
 ```bash
-git clone https://github.com/LukaLattanzi/CoderHouse-Proyecto-Backend-II.git
+git clone <repository-url>
 cd CoderHouse-Proyecto-Backend-II
 ```
 
-### **📦 Instalación de Dependencias**
+2. **Instalar dependencias**
 
 ```bash
 npm install
 ```
 
-### **🔧 Variables de Entorno**
+3. **Configurar variables de entorno**
 
-Crear archivo `.env` en la raíz del proyecto:
+```bash
+cp .env.example .env
+```
 
-```dotenv
-# Puerto del servidor
+Editar `.env` con los valores correspondientes:
+
+```env
+MONGO_URL=mongodb://localhost:27017/ecommerce-backend
+SESSION_SECRET=your-session-secret-key
+JWT_SECRET=your-jwt-secret-key
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+BASE_URL=http://localhost:8080
 PORT=8080
-
-# Conexión a MongoDB Atlas
-MONGO_URL=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>
-
-# Secretos para encriptación
-SESSION_SECRET=your-super-secret-session-key-here
-SECRET_KEY=your-jwt-secret-key-here
 ```
 
-> **📝 Nota**: Reemplaza `<username>`, `<password>`, `<cluster>` y `<database>` con tus credenciales reales de MongoDB Atlas.
-
-### **🚀 Ejecución del Proyecto**
-
-#### **Desarrollo con Hot Reload**
+4. **Ejecutar la aplicación**
 
 ```bash
+# Desarrollo
 npm run dev
-```
 
-#### **Producción**
-
-```bash
+# Producción
 npm start
 ```
 
-### **🌐 Acceso a la Aplicación**
+## Endpoints de la API
 
-Una vez iniciado el servidor:
+### Autenticación
 
-- **Frontend Web**: [http://localhost:8080](http://localhost:8080)
-- **API REST**: [http://localhost:8080/api](http://localhost:8080/api)
-- **Documentación**: Este README
+- `POST /api/sessions/register` - Registrar usuario
+- `POST /api/sessions/login` - Iniciar sesión
+- `GET /api/sessions/current` - Usuario actual (con DTO seguro)
+- `POST /api/sessions/request-password-reset` - Solicitar reset de contraseña
+- `POST /api/sessions/reset-password` - Restablecer contraseña
 
-### **🗄️ Configuración de MongoDB**
+### Productos (Requiere autenticación JWT)
 
-1. Crear cuenta en [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Crear un cluster gratuito
-3. Configurar usuario de base de datos
-4. Obtener string de conexión
-5. Agregar IP a whitelist (0.0.0.0/0 para desarrollo)
+- `GET /api/products` - Listar productos (todos los usuarios)
+- `GET /api/products/:id` - Obtener producto (todos los usuarios)
+- `POST /api/products` - Crear producto (solo admin)
+- `PUT /api/products/:id` - Actualizar producto (solo admin)
+- `DELETE /api/products/:id` - Eliminar producto (solo admin)
 
----
+### Carritos (Requiere autenticación JWT)
 
-## 🔧 API REST - Endpoints Completos
+- `GET /api/carts/:id` - Obtener carrito (propietario o admin)
+- `POST /api/carts/:id/products/:pid` - Agregar producto (solo usuarios)
+- `PUT /api/carts/:id/products/:pid` - Actualizar cantidad (solo usuarios)
+- `DELETE /api/carts/:id/products/:pid` - Eliminar producto (solo usuarios)
+- `POST /api/carts/:id/purchase` - Procesar compra (solo usuarios)
 
-### **👥 Autenticación y Usuarios**
+### Tickets (Requiere autenticación JWT)
 
-#### **Registro de Usuario**
+- `GET /api/tickets/user/my-tickets` - Mis tickets (usuario actual)
+- `GET /api/tickets/:id` - Obtener ticket (propietario o admin)
+- `GET /api/tickets` - Listar todos los tickets (solo admin)
+- `GET /api/tickets/reports/sales` - Reporte de ventas (solo admin)
 
-```http
-POST /api/sessions/register
-Content-Type: application/json
+## Roles y Autorización
 
-{
-  "first_name": "Juan",
-  "last_name": "Pérez",
-  "email": "juan@email.com",
-  "age": 30,
-  "password": "password123"
-}
-```
+### Usuario (`user`)
 
-#### **Login API (JWT)**
+- ✅ Ver productos
+- ✅ Agregar productos al carrito
+- ✅ Realizar compras
+- ✅ Ver sus propios tickets
+- ❌ Crear/editar/eliminar productos
+- ❌ Ver tickets de otros usuarios
 
-```http
-POST /api/sessions/login
-Content-Type: application/json
+### Administrador (`admin`)
 
-{
-  "email": "juan@email.com",
-  "password": "password123"
-}
+- ✅ Todas las acciones de usuario
+- ✅ Crear/editar/eliminar productos
+- ✅ Ver todos los carritos y tickets
+- ✅ Generar reportes de ventas
+- ❌ Agregar productos a carritos (lógica de negocio)
 
-# Response: { "token": "eyJhbGciOiJIUzI1NiIs..." }
-```
+## Patrones de Diseño Implementados
 
-#### **Login Web (Sessions)**
+### Repository Pattern
 
-```http
-POST /api/sessions/web-login
-Content-Type: application/x-www-form-urlencoded
+Separa la lógica de negocio del acceso a datos:
 
-email=juan@email.com&password=password123
-```
-
-#### **Usuario Actual (Passport JWT)**
-
-```http
-GET /api/sessions/current
-Authorization: Bearer <JWT_TOKEN>
-
-# Respuesta exitosa:
-{
-  "status": "success",
-  "payload": {
-    "_id": "usuario_id",
-    "first_name": "Juan",
-    "last_name": "Pérez",
-    "email": "juan@email.com",
-    "role": "user",
-    "cart": {
-      "_id": "carrito_id",
-      "products": [...]
+```javascript
+class ProductRepository {
+  async createProduct(productData) {
+    // Validaciones de negocio
+    if (productData.price <= 0) {
+      throw new Error("Price must be greater than 0");
     }
+    return await this.productDAO.create(productData);
   }
 }
 ```
 
-#### **CRUD de Usuarios**
+### DTO Pattern
 
-```http
-GET    /api/users              # Obtener todos los usuarios
-GET    /api/users/:id          # Obtener usuario por ID
-POST   /api/users              # Crear usuario
-PUT    /api/users/:id          # Actualizar usuario
-DELETE /api/users/:id          # Eliminar usuario
-```
+Transfiere solo datos necesarios y seguros:
 
-### **🛍️ Gestión de Productos**
-
-#### **Listar Productos con Filtros**
-
-```http
-GET /api/products?limit=10&page=1&sort=asc&query=electronics
-
-# Parámetros opcionales:
-# - limit: productos por página (default: 10)
-# - page: número de página (default: 1)
-# - sort: asc|desc (ordenar por precio)
-# - query: filtrar por categoría
-```
-
-#### **CRUD de Productos**
-
-```http
-GET    /api/products/:pid      # Obtener producto por ID
-POST   /api/products           # Crear producto
-PUT    /api/products/:pid      # Actualizar producto
-DELETE /api/products/:pid      # Eliminar producto
-```
-
-#### **Crear Producto (Ejemplo)**
-
-```http
-POST /api/products
-Content-Type: application/json
-
-{
-  "title": "iPhone 15 Pro",
-  "description": "Smartphone Apple último modelo",
-  "code": "IPHONE15PRO",
-  "price": 999.99,
-  "stock": 50,
-  "category": "electronics",
-  "thumbnails": ["img1.jpg", "img2.jpg"]
-}
-```
-
-### **🛒 Gestión de Carritos**
-
-#### **Ver Carrito**
-
-```http
-GET /api/carts/:cid
-Authorization: Bearer <JWT_TOKEN>
-```
-
-#### **Agregar Producto al Carrito**
-
-```http
-POST /api/carts/:cid/products/:pid
-Authorization: Bearer <JWT_TOKEN>
-
-# Incrementa cantidad si el producto ya existe
-```
-
-#### **Actualizar Cantidad de Producto**
-
-```http
-PUT /api/carts/:cid/products/:pid
-Content-Type: application/json
-Authorization: Bearer <JWT_TOKEN>
-
-{
-  "quantity": 3
-}
-```
-
-#### **Eliminar Producto del Carrito**
-
-```http
-DELETE /api/carts/:cid/products/:pid
-Authorization: Bearer <JWT_TOKEN>
-```
-
-#### **Actualizar Carrito Completo**
-
-```http
-PUT /api/carts/:cid
-Content-Type: application/json
-Authorization: Bearer <JWT_TOKEN>
-
-{
-  "products": [
-    {
-      "product": "producto_id_1",
-      "quantity": 2
-    },
-    {
-      "product": "producto_id_2",
-      "quantity": 1
-    }
-  ]
-}
-```
-
-#### **Vaciar Carrito**
-
-```http
-DELETE /api/carts/:cid
-Authorization: Bearer <JWT_TOKEN>
-```
-
-### **🧾 Sistema de Compras**
-
-#### **Finalizar Compra**
-
-```http
-POST /api/carts/:cid/purchase
-Authorization: Bearer <JWT_TOKEN>
-
-# Response incluye:
-# - ticket: información completa de la compra
-# - newCartId: ID del nuevo carrito vacío
-# - productsNotInStock: productos sin stock suficiente
-```
-
-### **🔍 Endpoints de Debug y Testing**
-
-#### **Test de Conectividad**
-
-```http
-GET /api/sessions/test
-
-# Response: {"status":"success","message":"Sessions router funcionando"}
-```
-
-#### **Generar Token de Prueba**
-
-```http
-GET /api/sessions/test-token
-
-# Response: Token válido para testing con instrucciones de uso
-```
-
-#### **Debug de Headers JWT**
-
-```http
-GET /api/sessions/debug-jwt
-Authorization: Bearer <JWT_TOKEN>
-
-# Verifica formato de headers y estructura del token
-```
-
-### **📊 Formatos de Respuesta**
-
-#### **Respuesta Exitosa**
-
-```json
-{
-  "status": "success",
-  "payload": { ... },
-  "message": "Operación completada"
-}
-```
-
-#### **Respuesta de Error**
-
-```json
-{
-  "status": "error",
-  "message": "Descripción del error"
-}
-```
-
-#### **Respuesta de Productos (Paginada)**
-
-```json
-{
-  "status": "success",
-  "payload": {
-    "docs": [...],           // Array de productos
-    "totalDocs": 25,         // Total de documentos
-    "limit": 10,             // Límite por página
-    "page": 1,               // Página actual
-    "totalPages": 3,         // Total de páginas
-    "hasNextPage": true,     // Hay página siguiente
-    "hasPrevPage": false,    // Hay página anterior
-    "nextPage": 2,           // Número de página siguiente
-    "prevPage": null         // Número de página anterior
+```javascript
+class UserCurrentDTO {
+  constructor(user) {
+    this.id = user._id;
+    this.email = user.email;
+    this.role = user.role;
+    // NO incluye password u otros datos sensibles
   }
 }
 ```
 
----
+## Lógica de Compra
 
-## 🧪 Ejemplos de Uso
+1. **Validación de carrito**: Verifica existencia y propiedad
+2. **Verificación de stock**: Comprueba disponibilidad por producto
+3. **Procesamiento parcial**: Productos disponibles se compran, otros quedan en carrito
+4. **Actualización de inventario**: Stock se reduce automáticamente
+5. **Generación de ticket**: Documento completo con detalles de compra
+6. **Limpieza de carrito**: Solo productos comprados se eliminan
 
-### **🔐 Flujo de Autenticación Completo**
+## Variables de Entorno
 
-#### **1. Registro de Usuario**
+Ver `.env.example` para todas las variables necesarias. Las principales son:
 
-```bash
-curl -X POST http://localhost:8080/api/sessions/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "first_name": "María",
-    "last_name": "García",
-    "email": "maria@email.com",
-    "age": 28,
-    "password": "mypassword123"
-  }'
-```
+- `MONGO_URL`: Conexión a MongoDB
+- `JWT_SECRET`: Clave para tokens JWT
+- `EMAIL_USER` / `EMAIL_PASS`: Credenciales para envío de emails
+- `BASE_URL`: URL base para enlaces en emails
 
-#### **2. Login y Obtención de Token**
+## Características de Seguridad
 
-```bash
-curl -X POST http://localhost:8080/api/sessions/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "maria@email.com",
-    "password": "mypassword123"
-  }'
+- 🔐 Contraseñas hasheadas con bcrypt
+- 🎫 Tokens JWT con expiración
+- 🛡️ Middleware de autorización granular
+- 📧 Tokens de reset con expiración (1 hora)
+- 🚫 Validación contra reutilización de contraseñas
+- 🔒 DTOs para prevenir exposición de datos sensibles
 
-# Response: {"status":"success","token":"eyJhbGciOiJIUzI1NiIs..."}
-```
+## Contribución
 
-#### **3. Verificar Token con Passport**
+1. Fork el proyecto
+2. Crear rama de feature (`git checkout -b feature/AmazingFeature`)
+3. Commit los cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir Pull Request
 
-```bash
-export JWT_TOKEN="eyJhbGciOiJIUzI1NiIs..."
+## Licencia
 
-curl -X GET http://localhost:8080/api/sessions/current \
-  -H "Authorization: Bearer $JWT_TOKEN"
-
-# Response exitosa con Passport JWT:
-# {
-#   "status": "success",
-#   "payload": {
-#     "_id": "user_id",
-#     "first_name": "María",
-#     "last_name": "García",
-#     "email": "maria@email.com",
-#     "cart": { "_id": "cart_id", "products": [...] }
-#   }
-# }
-```
-
-### **🌐 Navegación Web**
-
-#### **1. Acceso Directo**
-
-```
-http://localhost:8080/               → Redirige a /login o /products
-http://localhost:8080/register       → Formulario de registro
-http://localhost:8080/login          → Formulario de login
-```
-
-#### **2. Después de Autenticarse**
-
-```
-http://localhost:8080/products       → Catálogo de productos
-http://localhost:8080/products/ID    → Detalle de producto
-http://localhost:8080/carts/ID       → Vista del carrito
-http://localhost:8080/logout         → Cerrar sesión
-```
-
----
-
-## 📁 Estructura del Proyecto
-
-```
-📂 CoderHouse-Proyecto-Backend-II/
-├── 📄 package.json              # Dependencias y scripts
-├── 📄 README.md                 # Documentación completa
-├── 📄 .env                      # Variables de entorno (no incluido)
-├── 📂 data/
-│   └── 📄 products.json         # Datos iniciales de productos
-├── 📂 src/
-│   ├── 📄 app.js                # Servidor principal y configuración
-│   ├── 📂 routes/               # Definición de endpoints
-│   │   ├── 📄 products.router.js    # CRUD de productos
-│   │   ├── 📄 carts.router.js       # Gestión de carritos
-│   │   ├── 📄 sessions.router.js    # Autenticación JWT y web
-│   │   ├── 📄 users.router.js       # CRUD de usuarios
-│   │   └── 📄 views.router.js       # Rutas de vistas web
-│   ├── 📂 models/               # Esquemas de MongoDB
-│   │   ├── 📄 user.model.js         # Modelo de usuarios
-│   │   ├── 📄 product.model.js      # Modelo de productos
-│   │   ├── 📄 cart.model.js         # Modelo de carritos
-│   │   └── 📄 ticket.model.js       # Modelo de tickets
-│   ├── 📂 middlewares/          # Middleware personalizado
-│   │   ├── 📄 auth.js               # Autenticación web
-│   │   └── 📂 passport/
-│   │       └── 📄 passport-jwt.js   # Estrategia JWT
-│   ├── 📂 managers/             # Lógica de negocio
-│   │   └── 📄 CartManager.js        # Gestión de carritos
-│   ├── 📂 utils/                # Utilidades
-│   │   ├── 📄 crypto.js             # Hash de contraseñas
-│   │   └── 📄 jwt.js                # Manejo de JWT
-│   ├── 📂 views/                # Plantillas Handlebars
-│   │   ├── 📄 login.handlebars      # Formulario de login
-│   │   ├── 📄 register.handlebars   # Formulario de registro
-│   │   ├── 📄 products.handlebars   # Lista de productos
-│   │   ├── 📄 product-detail.handlebars # Detalle producto
-│   │   ├── 📄 cart.handlebars       # Vista del carrito
-│   │   ├── 📄 error.handlebars      # Página de error
-│   │   ├── 📂 layouts/
-│   │   │   └── 📄 main.handlebars   # Layout principal
-│   │   └── 📂 partials/
-│   │       └── 📄 navbar.handlebars # Barra de navegación
-│   └── 📂 public/               # Archivos estáticos
-│       ├── 📄 styles.css            # Estilos CSS
-│       └── 📂 js/
-│           └── 📄 realtime.js       # Cliente WebSocket
-```
-
-### **📦 Dependencias Principales**
-
-#### **Core Framework**
-
-- `express@5.1.0` - Framework web
-- `mongoose@8.16.4` - ODM para MongoDB
-
-#### **Autenticación**
-
-- `passport@0.7.0` - Middleware de autenticación
-- `passport-jwt@4.0.1` - Estrategia JWT
-- `jsonwebtoken@9.0.2` - Manejo de JWT
-- `bcrypt@5.1.1` - Hash de contraseñas
-
-#### **Sesiones y Base de Datos**
-
-- `express-session@1.18.2` - Manejo de sesiones
-- `connect-mongo@5.1.0` - Store de sesiones en MongoDB
-- `mongoose-paginate-v2@1.9.1` - Paginación
-
-#### **Frontend**
-
-- `express-handlebars@8.0.3` - Motor de plantillas
-- `socket.io@4.8.1` - WebSockets bidireccionales
-
-#### **Utilidades**
-
-- `uuid@11.1.0` - Generación de IDs únicos
-- `dotenv@17.2.0` - Variables de entorno
-
-## 🗄️ Base de Datos - MongoDB Collections
-
-### **📊 Colecciones Principales**
-
-#### **`users`** - Información de usuarios registrados
-
-```javascript
-{
-  _id: ObjectId,
-  first_name: "María",
-  last_name: "García",
-  email: "maria@email.com",
-  age: 28,
-  password: "$2b$10$hash...",    // Hash bcrypt
-  role: "user",                 // user | admin
-  cart: ObjectId,               // Referencia al carrito activo
-  __v: 0
-}
-```
-
-#### **`products`** - Catálogo de productos
-
-```javascript
-{
-  _id: ObjectId,
-  title: "iPhone 15 Pro",
-  description: "Smartphone Apple último modelo",
-  code: "IPHONE15PRO",          // Único
-  price: 999.99,
-  status: true,                 // Disponible/No disponible
-  stock: 50,
-  category: "electronics",
-  thumbnails: ["img1.jpg", "img2.jpg"],
-  __v: 0
-}
-```
-
-#### **`carts`** - Carritos de compras
-
-```javascript
-{
-  _id: ObjectId,
-  products: [
-    {
-      product: ObjectId,        // Ref a products
-      quantity: 2,
-      _id: ObjectId
-    }
-  ],
-  __v: 0
-}
-```
-
-#### **`tickets`** - Registro de compras
-
-```javascript
-{
-  _id: ObjectId,
-  code: "uuid-generated-string",     // UUID único
-  purchase_datetime: ISODate,
-  amount: 1999.98,                   // Total de la compra
-  purchaser: "maria@email.com",      // Email del comprador
-  cart: ObjectId,                    // Ref al carrito original
-  products: [                        // Snapshot de productos comprados
-    {
-      product: ObjectId,
-      quantity: 2,
-      price: 999.99,
-      _id: ObjectId
-    }
-  ],
-  __v: 0
-}
-```
-
-#### **`sessions`** - Sesiones web persistentes
-
-```javascript
-{
-  _id: "session-cookie-id",
-  expires: ISODate("2025-09-14T..."),
-  session: {
-    cookie: {
-      originalMaxAge: null,
-      expires: null,
-      httpOnly: true,
-      path: "/"
-    },
-    userId: ObjectId,              // ID del usuario autenticado
-    userEmail: "maria@email.com"   // Email del usuario
-  }
-}
-```
-
-### **🔄 Relaciones entre Colecciones**
-
-1. **User → Cart**: Cada usuario tiene un carrito activo (`user.cart`)
-2. **Cart → Products**: Los carritos referencian productos con cantidades
-3. **Ticket → Cart**: Los tickets mantienen referencia al carrito original
-4. **Ticket → Products**: Snapshot de productos al momento de la compra
-5. **Sessions → Users**: Las sesiones identifican usuarios por `userId`
-
-### **⚡ Índices y Performance**
-
-- **users.email**: Índice único para login rápido
-- **products.code**: Índice único para códigos de producto
-- **tickets.code**: Índice único para códigos de ticket
-- **sessions.\_id**: Índice automático para lookup de sesiones
-
----
-
-## � Implementación de Passport JWT
-
-### **🛡️ Autenticación Profesional**
-
-Este proyecto utiliza **Passport JWT de manera obligatoria** para toda la autenticación de API, siguiendo las mejores prácticas de seguridad:
-
-#### **Configuración Robusta**
-
-```javascript
-// Estrategia JWT configurada con:
-const opts = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.SECRET_KEY,
-};
-
-// Verificación automática en cada request
-passport.use(
-  "jwt",
-  new JwtStrategy(opts, async (jwt_payload, done) => {
-    const user = await UserModel.findById(jwt_payload._id).populate("cart");
-    return user ? done(null, user) : done(null, false);
-  })
-);
-```
-
-#### **Ventajas de Esta Implementación**
-
-- ✅ **Seguridad máxima**: Validación automática por Passport
-- ✅ **Escalabilidad**: Manejo profesional de tokens
-- ✅ **Mantenibilidad**: Código limpio y estandarizado
-- ✅ **Debugging**: Logs detallados para troubleshooting
-- ✅ **Flexibilidad**: Fácil extensión para roles y permisos
-
-#### **Flujo de Autenticación**
-
-1. **Login**: Genera JWT con payload completo del usuario
-2. **Request**: Cliente envía `Authorization: Bearer <token>`
-3. **Passport**: Extrae, valida y decodifica automáticamente
-4. **Database**: Verifica usuario existe y está activo
-5. **Response**: `req.user` disponible en controladores
-
-#### **Manejo de Errores**
-
-```javascript
-// Respuestas estándar para diferentes escenarios:
-- Token faltante/inválido: 401 Unauthorized
-- Usuario no encontrado: 401 Unauthorized
-- Error de servidor: 500 Internal Server Error
-- Autenticación exitosa: 200 + payload completo
-```
-
-#### **Testing y Debug**
-
-- `GET /api/sessions/test-token` - Genera token válido para pruebas
-- `GET /api/sessions/debug-jwt` - Verifica formato de headers
-- `GET /api/sessions/current` - Endpoint principal protegido
-
----
-
-## �📝 Licencia
-
-**ISC License** - Consulta el archivo `package.json` para más detalles.
-
----
-
-## 👨‍💻 Autor
-
-**Luka Lattanzi** - [GitHub](https://github.com/LukaLattanzi)
-
-**Proyecto Final - CoderHouse Backend II**
-
----
-
-## 🙏 Agradecimientos
-
-- **CoderHouse** por la formación en desarrollo backend
-- **MongoDB Atlas** por la base de datos gratuita
-- **Comunidad de Node.js** por las librerías utilizadas
-
----
+Este proyecto está bajo la licencia MIT.

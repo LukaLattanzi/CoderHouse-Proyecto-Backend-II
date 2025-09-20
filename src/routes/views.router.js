@@ -2,9 +2,11 @@ import { Router } from 'express';
 import { ProductModel } from '../models/product.model.js';
 import { CartModel } from '../models/cart.model.js';
 import { UserModel } from '../models/user.model.js';
-import { requireAuth, redirectIfAuthenticated } from '../middlewares/auth.js';
+import { requireAuth, redirectIfAuthenticated, requireHybridAuth } from '../middlewares/auth.js';
+import { PasswordResetService } from '../services/PasswordResetService.js';
 
 const router = Router();
+const passwordResetService = new PasswordResetService();
 
 router.get('/login', redirectIfAuthenticated, (req, res) => {
     res.render('login', { title: 'Iniciar Sesión' });
@@ -21,7 +23,7 @@ router.get('/', (req, res) => {
     res.redirect('/products');
 });
 
-router.get('/products', requireAuth, async (req, res) => {
+router.get('/products', requireHybridAuth, async (req, res) => {
     try {
         const { limit = 10, page = 1, sort, query } = req.query;
         const options = { page: parseInt(page), limit: parseInt(limit), lean: true };
@@ -33,12 +35,7 @@ router.get('/products', requireAuth, async (req, res) => {
         const searchQuery = query ? { category: query } : {};
         const result = await ProductModel.paginate(searchQuery, options);
 
-        const user = await UserModel.findById(req.session.userId).populate('cart').lean();
-
-        if (!user) {
-            console.error('Usuario no encontrado en sesión:', req.session.userId);
-            return res.redirect('/login');
-        }
+        const user = req.user;
 
         if (!user.cart) {
             console.error('Usuario sin carrito asignado:', user._id);
@@ -68,7 +65,7 @@ router.get('/products', requireAuth, async (req, res) => {
     }
 });
 
-router.get('/products/:pid', requireAuth, async (req, res) => {
+router.get('/products/:pid', requireHybridAuth, async (req, res) => {
     try {
         const { pid } = req.params;
         const product = await ProductModel.findById(pid).lean();
@@ -77,12 +74,7 @@ router.get('/products/:pid', requireAuth, async (req, res) => {
             return res.status(404).render('error', { message: 'Producto no encontrado' });
         }
 
-        const user = await UserModel.findById(req.session.userId).populate('cart').lean();
-
-        if (!user) {
-            console.error('Usuario no encontrado en sesión:', req.session.userId);
-            return res.redirect('/login');
-        }
+        const user = req.user;
 
         if (!user.cart) {
             console.error('Usuario sin carrito asignado:', user._id);
@@ -105,22 +97,18 @@ router.get('/products/:pid', requireAuth, async (req, res) => {
     }
 });
 
-router.get('/carts/:cid', requireAuth, async (req, res) => {
+router.get('/carts/:cid', requireHybridAuth, async (req, res) => {
     try {
         const { cid } = req.params;
-        const user = await UserModel.findById(req.session.userId).populate('cart').lean();
-
-        if (!user) {
-            console.error('Usuario no encontrado en sesión:', req.session.userId);
-            return res.redirect('/login');
-        }
+        const user = req.user;
 
         if (!user.cart) {
             console.error('Usuario sin carrito asignado:', user._id);
             return res.status(403).render('error', { message: 'Carrito no encontrado para el usuario' });
         }
 
-        if (user.cart._id.toString() !== cid) {
+        const userCartId = user.cart?._id || user.cart;
+        if (userCartId.toString() !== cid) {
             return res.status(403).render('error', { message: 'Acceso denegado al carrito' });
         }
 
@@ -144,13 +132,62 @@ router.get('/carts/:cid', requireAuth, async (req, res) => {
     }
 });
 
-router.get('/logout', requireAuth, (req, res) => {
+router.get('/logout', requireHybridAuth, (req, res) => {
+    // Limpiar tanto sesión como JWT
     req.session.destroy((err) => {
         if (err) {
             console.error('Error al cerrar sesión:', err);
         }
+        // También limpiar cookie JWT
+        res.clearCookie('jwt_token');
         res.redirect('/login');
     });
+});
+
+router.get('/tickets', requireHybridAuth, (req, res) => {
+    res.render('tickets', {
+        title: 'Mis Tickets',
+        user: {
+            name: `${req.user.first_name} ${req.user.last_name}`,
+            email: req.user.email
+        }
+    });
+});
+
+router.get('/request-password-reset', redirectIfAuthenticated, (req, res) => {
+    res.render('request-password-reset', {
+        title: 'Recuperar Contraseña'
+    });
+});
+
+router.get('/reset-password', redirectIfAuthenticated, async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            return res.render('reset-password', {
+                title: 'Restablecer Contraseña',
+                validToken: false,
+                error: 'Token no proporcionado'
+            });
+        }
+
+        const validation = await passwordResetService.validateResetToken(token);
+
+        res.render('reset-password', {
+            title: 'Restablecer Contraseña',
+            validToken: validation.valid,
+            email: validation.email,
+            token: token
+        });
+    } catch (error) {
+        console.error('Error validating token for view:', error);
+        res.render('reset-password', {
+            title: 'Restablecer Contraseña',
+            validToken: false,
+            error: error.message
+        });
+    }
 });
 
 export default router;

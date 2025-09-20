@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import { engine } from 'express-handlebars';
 import { Server as SocketServer } from 'socket.io';
 import http from 'http';
@@ -20,6 +21,7 @@ import cartsRouter from './routes/carts.router.js';
 import viewsRouter from './routes/views.router.js';
 import usersRouter from './routes/users.router.js';
 import sessionsRouter from './routes/sessions.router.js';
+import ticketsRouter from './routes/tickets.router.js';
 import passport from 'passport';
 import { ProductModel } from './models/product.model.js';
 import { CartModel } from './models/cart.model.js';
@@ -36,6 +38,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
@@ -55,18 +58,6 @@ app.use('/api/carts', (req, res, next) => {
   next();
 });
 
-/* app.use(async (req, res, next) => {
-  if (!req.session.cartId) {
-    try {
-      const newCart = await CartModel.create({ products: [] });
-      req.session.cartId = newCart._id.toString();
-    } catch (error) {
-      console.error('Error creando carrito para la sesión:', error);
-    }
-  }
-  next();
-}); */
-
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
@@ -76,6 +67,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/sessions', sessionsRouter);
+app.use('/api/tickets', ticketsRouter);
 app.use('/', viewsRouter);
 
 io.on('connection', async socket => {

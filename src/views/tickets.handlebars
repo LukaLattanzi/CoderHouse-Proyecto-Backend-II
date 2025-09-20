@@ -1,0 +1,238 @@
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Mis Tickets de Compra 🎫</h2>
+        <a href="/products" class="btn btn-outline-primary">Volver a Productos</a>
+    </div>
+
+    <div id="tickets-container">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Cargando tickets...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles del ticket -->
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ticketModalLabel">Detalles del Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ticket-details">
+                <!-- Los detalles se cargarán aquí -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">Imprimir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadUserTickets();
+    });
+
+    async function loadUserTickets() {
+        try {
+            // Obtener el token del localStorage con el nombre correcto
+            const token = localStorage.getItem('jwt_token');
+            
+            if (!token) {
+                console.error('No token found, redirecting to login');
+                if (typeof Toastify !== 'undefined') {
+                    Toastify({
+                        text: "Debes iniciar sesión para ver tus tickets",
+                        duration: 3000,
+                        gravity: "bottom",
+                        position: "right",
+                        style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" }
+                    }).showToast();
+                }
+                setTimeout(() => window.location.href = '/login', 1500);
+                return;
+            }
+
+            console.log('Making request to get user tickets...');
+
+            const response = await fetch('/api/tickets/user/my-tickets', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('Tickets response status:', response.status);
+
+            if (response.status === 401) {
+                console.error('Unauthorized, redirecting to login');
+                localStorage.removeItem('jwt_token');
+                if (typeof Toastify !== 'undefined') {
+                    Toastify({
+                        text: "Tu sesión ha expirado. Redirigiendo al login...",
+                        duration: 2000,
+                        gravity: "bottom",
+                        position: "right",
+                        style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" }
+                    }).showToast();
+                }
+                setTimeout(() => window.location.href = '/login', 2000);
+                return;
+            }
+
+            const result = await response.json();
+            console.log('Tickets response data:', result);
+
+            if (result.status === 'success') {
+                displayTickets(result.payload);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error loading tickets:', error);
+            document.getElementById('tickets-container').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <h4>Error al cargar tickets</h4>
+                    <p>${error.message}</p>
+                    <a href="/products" class="btn btn-primary">Volver a Productos</a>
+                </div>
+            `;
+        }
+    }
+
+    function displayTickets(tickets) {
+        const container = document.getElementById('tickets-container');
+
+        if (tickets.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info text-center">
+                    <h4>No tienes tickets de compra</h4>
+                    <p>Cuando realices una compra, tus tickets aparecerán aquí.</p>
+                    <a href="/products" class="btn btn-primary">Ir de Compras</a>
+                </div>
+            `;
+            return;
+        }
+
+        const ticketsHTML = tickets.map(ticket => `
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0 text-primary">Ticket #${ticket.code}</h5>
+                        <small class="text-muted">
+                            ${new Date(ticket.purchase_datetime).toLocaleString('es-ES', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </small>
+                    </div>
+                    <h4 class="mb-0 text-success">$${ticket.amount.toFixed(2)}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="mb-1"><strong>Comprador:</strong> ${ticket.purchaser}</p>
+                            <p class="mb-0"><strong>Productos:</strong> ${ticket.itemCount} item(s)</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-outline-primary" onclick="viewTicketDetails('${ticket.id}')">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        container.innerHTML = ticketsHTML;
+    }
+
+    async function viewTicketDetails(ticketId) {
+        try {
+            const token = localStorage.getItem('jwt_token');
+            
+            console.log('Loading ticket details for:', ticketId);
+            
+            const response = await fetch(`/api/tickets/${ticketId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem('jwt_token');
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+            console.log('Ticket details response:', result);
+
+            if (result.status === 'success') {
+                showTicketModal(result.payload);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error('Error loading ticket details:', error);
+            if (typeof Toastify !== 'undefined') {
+                Toastify({
+                    text: "Error al cargar detalles del ticket: " + error.message,
+                    duration: 3000,
+                    gravity: "bottom",
+                    position: "right",
+                    style: { background: "linear-gradient(to right, #ff5f6d, #ffc371)" }
+                }).showToast();
+            }
+        }
+    }
+
+    function showTicketModal(ticket) {
+        const productsHTML = ticket.products.map(item => `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <h6 class="mb-1">${item.product.title}</h6>
+                    <small class="text-muted">
+                        Cantidad: ${item.quantity} × $${item.price.toFixed(2)}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <strong>$${item.subtotal.toFixed(2)}</strong>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('ticketModalLabel').textContent = `Ticket #${ticket.code}`;
+        document.getElementById('ticket-details').innerHTML = `
+            <div class="mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Fecha:</strong> ${new Date(ticket.purchase_datetime).toLocaleString('es-ES')}</p>
+                        <p><strong>Comprador:</strong> ${ticket.purchaser}</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h4 class="text-success">Total: $${ticket.amount.toFixed(2)}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <h5>Productos Comprados:</h5>
+            <div class="border rounded p-3">
+                ${productsHTML}
+            </div>
+        `;
+
+        // Mostrar el modal usando Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('ticketModal'));
+        modal.show();
+    }
+</script>
