@@ -1,25 +1,34 @@
 import { UserRepository } from '../repositories/UserRepository.js';
 import { EmailService } from './EmailService.js';
 import { hashPassword, isValidPassword } from '../utils/crypto.js';
+import { PasswordResetTokenModel } from '../models/password-reset-token.model.js';
 import jwt from 'jsonwebtoken';
 
+// Versión actualizada con persistencia en base de datos
 export class PasswordResetService {
     constructor() {
         this.userRepository = new UserRepository();
         this.emailService = new EmailService();
-        this.resetTokens = new Map();
     }
 
     async requestPasswordReset(email) {
         try {
+            console.log('🔄 Solicitando reset de contraseña para:', email);
 
             const user = await this.userRepository.getUserByEmail(email);
             if (!user) {
+                console.log('❌ Usuario no encontrado para email:', email);
                 return {
                     success: true,
                     message: 'Si el email existe, recibirás un enlace de recuperación'
                 };
             }
+
+            console.log('✅ Usuario encontrado:', user.email);
+
+            // Eliminar tokens anteriores para este usuario
+            await PasswordResetTokenModel.deleteMany({ userId: user._id });
+            console.log('🗑️ Tokens anteriores eliminados para el usuario');
 
             const resetToken = jwt.sign(
                 {
@@ -31,16 +40,17 @@ export class PasswordResetService {
                 { expiresIn: '1h' }
             );
 
-            this.resetTokens.set(resetToken, {
-                userId: user._id.toString(),
+            console.log('🔑 Token JWT generado');
+
+            // Guardar token en la base de datos
+            await PasswordResetTokenModel.create({
+                token: resetToken,
+                userId: user._id,
                 email: user.email,
-                createdAt: Date.now(),
                 used: false
             });
 
-            setTimeout(() => {
-                this.resetTokens.delete(resetToken);
-            }, 60 * 60 * 1000);
+            console.log('💾 Token guardado en base de datos');
 
             await this.emailService.sendPasswordResetEmail(
                 user.email,
@@ -48,42 +58,60 @@ export class PasswordResetService {
                 user.first_name
             );
 
+            console.log('📧 Email de recuperación enviado');
+
             return {
                 success: true,
                 message: 'Si el email existe, recibirás un enlace de recuperación'
             };
         } catch (error) {
-            console.error('Error en requestPasswordReset:', error);
+            console.error('❌ Error en requestPasswordReset:', error);
             throw new Error(`Error requesting password reset: ${error.message}`);
         }
     }
 
     async validateResetToken(token) {
         try {
+            console.log('🔍 Validando token...', token ? 'Token presente' : 'Token ausente');
 
-            const tokenData = this.resetTokens.get(token);
+            // Buscar token en la base de datos
+            const tokenData = await PasswordResetTokenModel.findOne({ token });
             if (!tokenData) {
+                console.log('❌ Token no encontrado en base de datos');
                 throw new Error('Token inválido o expirado');
             }
 
+            console.log('✅ Token encontrado en base de datos para:', tokenData.email);
+
             if (tokenData.used) {
+                console.log('❌ Token ya utilizado');
                 throw new Error('Token ya utilizado');
             }
 
+            // Verificar JWT
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            console.log('✅ Token JWT válido para userId:', decoded.userId);
 
-            const tokenAge = Date.now() - tokenData.createdAt;
+            // Verificar que el token no haya expirado manualmente (además del TTL de MongoDB)
+            const tokenAge = Date.now() - tokenData.createdAt.getTime();
             const oneHour = 60 * 60 * 1000;
 
             if (tokenAge > oneHour) {
-                this.resetTokens.delete(token);
+                console.log('❌ Token expirado, edad:', Math.round(tokenAge / (60 * 1000)), 'minutos');
+                await PasswordResetTokenModel.deleteOne({ token });
                 throw new Error('Token expirado');
             }
 
+            console.log('✅ Token dentro del tiempo válido, edad:', Math.round(tokenAge / (60 * 1000)), 'minutos');
+
+            // Verificar que el usuario aún existe
             const user = await this.userRepository.getUserById(decoded.userId);
             if (!user) {
+                console.log('❌ Usuario no encontrado para ID:', decoded.userId);
                 throw new Error('Usuario no encontrado');
             }
+
+            console.log('✅ Usuario encontrado:', user.email);
 
             return {
                 valid: true,
@@ -91,6 +119,7 @@ export class PasswordResetService {
                 email: decoded.email
             };
         } catch (error) {
+            console.log('❌ Error en validateResetToken:', error.message);
             if (error.name === 'JsonWebTokenError') {
                 throw new Error('Token inválido');
             }
@@ -103,6 +132,7 @@ export class PasswordResetService {
 
     async resetPassword(token, newPassword) {
         try {
+            console.log('🔄 Iniciando reset de contraseña...');
 
             const validation = await this.validateResetToken(token);
             if (!validation.valid) {
@@ -114,78 +144,83 @@ export class PasswordResetService {
                 throw new Error('Usuario no encontrado');
             }
 
+            console.log('🔐 Verificando que la nueva contraseña sea diferente...');
             if (isValidPassword(newPassword, user.password)) {
-                throw new Error('La nueva contraseña no puede ser igual a la contraseña actual');
+                console.log('❌ La nueva contraseña es igual a la actual');
+                throw new Error('La nueva contraseña debe ser diferente a la contraseña actual');
             }
 
+            console.log('✅ La nueva contraseña es diferente a la actual');
+
+            console.log('🔐 Hasheando nueva contraseña...');
             const hashedNewPassword = hashPassword(newPassword);
 
+            console.log('💾 Actualizando contraseña en base de datos...');
             await this.userRepository.updatePassword(
                 validation.userId,
                 hashedNewPassword,
                 user.password
             );
 
-            const tokenData = this.resetTokens.get(token);
-            if (tokenData) {
-                tokenData.used = true;
-            }
+            // Marcar token como usado en la base de datos
+            console.log('✅ Marcando token como usado...');
+            await PasswordResetTokenModel.updateOne(
+                { token }, 
+                { used: true }
+            );
 
-            setTimeout(() => {
-                this.resetTokens.delete(token);
-            }, 5 * 60 * 1000);
+            console.log('🎉 Contraseña restablecida exitosamente para:', user.email);
 
             return {
                 success: true,
-                message: 'Contraseña actualizada exitosamente'
+                message: 'Contraseña restablecida exitosamente'
             };
         } catch (error) {
-            console.error('Error en resetPassword:', error);
+            console.error('❌ Error en resetPassword:', error);
+            
+            // No envolver el error para mantener el mensaje específico
+            if (error.message.includes('nueva contraseña debe ser diferente') || 
+                error.message.includes('nueva contraseña no puede ser igual')) {
+                throw error; // Lanzar el error original sin envolver
+            }
+            
             throw new Error(`Error resetting password: ${error.message}`);
         }
     }
 
-    async invalidateToken(token) {
+    // Método para limpiar tokens expirados manualmente (opcional)
+    async cleanupExpiredTokens() {
         try {
-            const tokenData = this.resetTokens.get(token);
-            if (tokenData) {
-                tokenData.used = true;
-            }
+            const oneHour = 60 * 60 * 1000;
+            const expiredAt = new Date(Date.now() - oneHour);
+            
+            const result = await PasswordResetTokenModel.deleteMany({
+                createdAt: { $lt: expiredAt }
+            });
+            
+            console.log(`🧹 Limpieza: ${result.deletedCount} tokens expirados eliminados`);
+            return result.deletedCount;
         } catch (error) {
-            console.error('Error invalidating token:', error);
+            console.error('Error en cleanupExpiredTokens:', error);
+            return 0;
         }
     }
 
-    cleanupExpiredTokens() {
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000;
-
-        for (const [token, data] of this.resetTokens.entries()) {
-            if (now - data.createdAt > oneHour) {
-                this.resetTokens.delete(token);
-            }
+    // Método para obtener estadísticas de tokens (opcional)
+    async getTokenStats() {
+        try {
+            const total = await PasswordResetTokenModel.countDocuments();
+            const used = await PasswordResetTokenModel.countDocuments({ used: true });
+            const active = await PasswordResetTokenModel.countDocuments({ used: false });
+            
+            return {
+                total,
+                used,
+                active
+            };
+        } catch (error) {
+            console.error('Error en getTokenStats:', error);
+            return { total: 0, used: 0, active: 0 };
         }
-    }
-
-    getTokenStats() {
-        const now = Date.now();
-        const stats = {
-            total: this.resetTokens.size,
-            used: 0,
-            expired: 0,
-            active: 0
-        };
-
-        for (const [token, data] of this.resetTokens.entries()) {
-            if (data.used) {
-                stats.used++;
-            } else if (now - data.createdAt > 60 * 60 * 1000) {
-                stats.expired++;
-            } else {
-                stats.active++;
-            }
-        }
-
-        return stats;
     }
 }

@@ -163,8 +163,11 @@ router.get('/request-password-reset', redirectIfAuthenticated, (req, res) => {
 router.get('/reset-password', redirectIfAuthenticated, async (req, res) => {
     try {
         const { token } = req.query;
+        console.log('🔍 Reset password route - Token recibido:', token ? 'SÍ' : 'NO');
+        console.log('🔍 Query params completos:', req.query);
 
         if (!token) {
+            console.log('❌ Token no proporcionado en la URL');
             return res.render('reset-password', {
                 title: 'Restablecer Contraseña',
                 validToken: false,
@@ -172,7 +175,9 @@ router.get('/reset-password', redirectIfAuthenticated, async (req, res) => {
             });
         }
 
+        console.log('✅ Validando token...');
         const validation = await passwordResetService.validateResetToken(token);
+        console.log('✅ Token válido para:', validation.email);
 
         res.render('reset-password', {
             title: 'Restablecer Contraseña',
@@ -181,7 +186,7 @@ router.get('/reset-password', redirectIfAuthenticated, async (req, res) => {
             token: token
         });
     } catch (error) {
-        console.error('Error validating token for view:', error);
+        console.error('❌ Error validating token for view:', error.message);
         res.render('reset-password', {
             title: 'Restablecer Contraseña',
             validToken: false,
