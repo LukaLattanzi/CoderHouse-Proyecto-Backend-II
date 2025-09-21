@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { CartRepository } from '../repositories/CartRepository.js';
 import { TicketRepository } from '../repositories/TicketRepository.js';
-import { CartDTO, CartSummaryDTO } from '../dto/CartDTO.js';
+import { CartDTO } from '../dto/CartDTO.js';
 import { PurchaseResultDTO } from '../dto/TicketDTO.js';
 import {
     authenticateJWT,

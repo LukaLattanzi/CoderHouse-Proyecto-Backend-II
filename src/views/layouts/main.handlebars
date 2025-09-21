@@ -17,19 +17,14 @@
     </main>
 
     <script>
-        // Establecer cookie JWT si existe en localStorage
         const token = localStorage.getItem('jwt_token');
         if (token) {
             document.cookie = `jwt_token=${token}; path=/; SameSite=Lax`;
         }
 
-        // Función para logout completo
         function logout() {
-            // Limpiar localStorage
             localStorage.removeItem('jwt_token');
-            // Limpiar cookie
             document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-            // Redirigir al logout del servidor para limpiar sesión
             window.location.href = '/logout';
         }
     </script>

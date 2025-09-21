@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { ProductModel } from '../models/product.model.js';
 import { ProductRepository } from '../repositories/ProductRepository.js';
 import { ProductDTO, ProductListDTO } from '../dto/ProductDTO.js';
 import {

@@ -27,7 +27,7 @@ export class TicketRepository {
 
                 // Obtener el ID del producto correctamente
                 const productId = product._id || product;
-                
+
                 await this.productRepository.updateStock(productId, quantity);
 
                 purchasedProducts.push({

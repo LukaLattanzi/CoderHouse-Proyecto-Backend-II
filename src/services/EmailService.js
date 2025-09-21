@@ -9,7 +9,7 @@ export class EmailService {
 
     async initializeTransporter() {
         try {
-            // Intentar configurar Gmail primero
+
             if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_USER !== 'your-email@gmail.com') {
                 console.log('🔧 Configurando transporter de Gmail...');
                 this.transporter = nodemailer.createTransport({
@@ -20,20 +20,18 @@ export class EmailService {
                     }
                 });
 
-                // Verificar la conexión
                 await this.transporter.verify();
                 console.log('✅ Gmail transporter configurado exitosamente');
                 this.isEthereal = false;
-                
+
             } else {
                 throw new Error('Credenciales de Gmail no configuradas');
             }
         } catch (error) {
             console.log('⚠️ Gmail no disponible, configurando Ethereal para testing...');
-            
-            // Usar Ethereal como fallback para testing
+
             const testAccount = await nodemailer.createTestAccount();
-            
+
             this.transporter = nodemailer.createTransport({
                 host: 'smtp.ethereal.email',
                 port: 587,
@@ -43,7 +41,7 @@ export class EmailService {
                     pass: testAccount.pass
                 }
             });
-            
+
             this.isEthereal = true;
             console.log('📧 Ethereal Email configurado para testing:');
             console.log(`   Email: ${testAccount.user}`);
@@ -54,7 +52,7 @@ export class EmailService {
 
     async sendPasswordResetEmail(userEmail, resetToken, userName) {
         try {
-            // Esperar a que el transporter esté inicializado si es necesario
+
             if (!this.transporter) {
                 await this.initializeTransporter();
             }
@@ -127,7 +125,7 @@ export class EmailService {
                 console.log('📧 Email enviado exitosamente usando Ethereal:');
                 console.log(`   Message ID: ${info.messageId}`);
                 console.log(`   Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-                
+
                 return {
                     success: true,
                     messageId: info.messageId,

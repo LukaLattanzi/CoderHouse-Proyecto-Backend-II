@@ -2,9 +2,8 @@
     <h2 class="mb-4">Mi Carrito de Compras 🛒</h2>
 
     <div id="cart-container" class="list-group">
+
         {{#if cart.products.length}}
-        
-        <!-- Botón para limpiar todo el carrito -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Productos en tu carrito:</h4>
             <button class="btn btn-outline-danger btn-sm" onclick="clearCart('{{cart._id}}')">
@@ -23,9 +22,9 @@
                 </div>
                 <div class="d-flex align-items-center gap-3">
                     <span class="badge bg-primary rounded-pill">Cantidad: {{this.quantity}}</span>
-                    <button class="btn btn-outline-danger btn-sm" 
-                            onclick="removeProductFromCart('{{../cart._id}}', '{{this.product._id}}', '{{this.product.title}}')"
-                            title="Eliminar producto">
+                    <button class="btn btn-outline-danger btn-sm"
+                        onclick="removeProductFromCart('{{../cart._id}}', '{{this.product._id}}', '{{this.product.title}}')"
+                        title="Eliminar producto">
                         <i class="bi bi-trash"></i>
                     </button>
                 </div>
@@ -34,7 +33,6 @@
         {{/if}}
         {{/each}}
 
-        <!-- Botones de acción -->
         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center mt-3">
             <div>
                 <strong>Total: ${{cart.total}}</strong>
@@ -66,9 +64,9 @@
         resultDiv.innerHTML = `<div class="alert alert-info">Procesando tu compra...</div>`;
 
         try {
-            // Obtener el token del localStorage
+
             const token = localStorage.getItem('jwt_token');
-            
+
             if (!token) {
                 resultDiv.innerHTML = `<div class="alert alert-danger">Debes iniciar sesión para realizar la compra.</div>`;
                 purchaseBtn.disabled = false;
@@ -87,16 +85,16 @@
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             console.log('Purchase response status:', response.status);
             console.log('Purchase response ok:', response.ok);
-            
+
             const data = await response.json();
             console.log('Purchase response data:', data);
 
             if (response.ok) {
                 console.log('Purchase successful, data:', data);
-                
+
                 resultDiv.innerHTML = `
                 <div class="alert alert-success">
                     <h4>¡Compra Exitosa!</h4>
@@ -164,7 +162,6 @@
             });
 
             if (response.ok) {
-                // Recargar la página para mostrar el carrito actualizado
                 window.location.reload();
             } else if (response.status === 401) {
                 if (typeof Toastify !== 'undefined') {
@@ -243,7 +240,7 @@
                         style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
                     }).showToast();
                 }
-                // Recargar la página para mostrar el carrito vacío
+
                 setTimeout(() => window.location.reload(), 1000);
             } else if (response.status === 401) {
                 if (typeof Toastify !== 'undefined') {

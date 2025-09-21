@@ -4,7 +4,6 @@ import { hashPassword, isValidPassword } from '../utils/crypto.js';
 import { PasswordResetTokenModel } from '../models/password-reset-token.model.js';
 import jwt from 'jsonwebtoken';
 
-// Versión actualizada con persistencia en base de datos
 export class PasswordResetService {
     constructor() {
         this.userRepository = new UserRepository();
@@ -26,7 +25,6 @@ export class PasswordResetService {
 
             console.log('✅ Usuario encontrado:', user.email);
 
-            // Eliminar tokens anteriores para este usuario
             await PasswordResetTokenModel.deleteMany({ userId: user._id });
             console.log('🗑️ Tokens anteriores eliminados para el usuario');
 
@@ -42,7 +40,6 @@ export class PasswordResetService {
 
             console.log('🔑 Token JWT generado');
 
-            // Guardar token en la base de datos
             await PasswordResetTokenModel.create({
                 token: resetToken,
                 userId: user._id,
@@ -74,7 +71,6 @@ export class PasswordResetService {
         try {
             console.log('🔍 Validando token...', token ? 'Token presente' : 'Token ausente');
 
-            // Buscar token en la base de datos
             const tokenData = await PasswordResetTokenModel.findOne({ token });
             if (!tokenData) {
                 console.log('❌ Token no encontrado en base de datos');
@@ -88,11 +84,9 @@ export class PasswordResetService {
                 throw new Error('Token ya utilizado');
             }
 
-            // Verificar JWT
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             console.log('✅ Token JWT válido para userId:', decoded.userId);
 
-            // Verificar que el token no haya expirado manualmente (además del TTL de MongoDB)
             const tokenAge = Date.now() - tokenData.createdAt.getTime();
             const oneHour = 60 * 60 * 1000;
 
@@ -104,7 +98,6 @@ export class PasswordResetService {
 
             console.log('✅ Token dentro del tiempo válido, edad:', Math.round(tokenAge / (60 * 1000)), 'minutos');
 
-            // Verificar que el usuario aún existe
             const user = await this.userRepository.getUserById(decoded.userId);
             if (!user) {
                 console.log('❌ Usuario no encontrado para ID:', decoded.userId);
@@ -162,10 +155,9 @@ export class PasswordResetService {
                 user.password
             );
 
-            // Marcar token como usado en la base de datos
             console.log('✅ Marcando token como usado...');
             await PasswordResetTokenModel.updateOne(
-                { token }, 
+                { token },
                 { used: true }
             );
 
@@ -177,27 +169,25 @@ export class PasswordResetService {
             };
         } catch (error) {
             console.error('❌ Error en resetPassword:', error);
-            
-            // No envolver el error para mantener el mensaje específico
-            if (error.message.includes('nueva contraseña debe ser diferente') || 
+
+            if (error.message.includes('nueva contraseña debe ser diferente') ||
                 error.message.includes('nueva contraseña no puede ser igual')) {
-                throw error; // Lanzar el error original sin envolver
+                throw error;
             }
-            
+
             throw new Error(`Error resetting password: ${error.message}`);
         }
     }
 
-    // Método para limpiar tokens expirados manualmente (opcional)
     async cleanupExpiredTokens() {
         try {
             const oneHour = 60 * 60 * 1000;
             const expiredAt = new Date(Date.now() - oneHour);
-            
+
             const result = await PasswordResetTokenModel.deleteMany({
                 createdAt: { $lt: expiredAt }
             });
-            
+
             console.log(`🧹 Limpieza: ${result.deletedCount} tokens expirados eliminados`);
             return result.deletedCount;
         } catch (error) {
@@ -206,13 +196,12 @@ export class PasswordResetService {
         }
     }
 
-    // Método para obtener estadísticas de tokens (opcional)
     async getTokenStats() {
         try {
             const total = await PasswordResetTokenModel.countDocuments();
             const used = await PasswordResetTokenModel.countDocuments({ used: true });
             const active = await PasswordResetTokenModel.countDocuments({ used: false });
-            
+
             return {
                 total,
                 used,

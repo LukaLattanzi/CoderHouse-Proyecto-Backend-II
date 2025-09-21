@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ProductModel } from '../models/product.model.js';
 import { CartModel } from '../models/cart.model.js';
 import { UserModel } from '../models/user.model.js';
-import { requireAuth, redirectIfAuthenticated, requireHybridAuth } from '../middlewares/auth.js';
+import { redirectIfAuthenticated, requireHybridAuth } from '../middlewares/auth.js';
 import { PasswordResetService } from '../services/PasswordResetService.js';
 
 const router = Router();
@@ -133,12 +133,12 @@ router.get('/carts/:cid', requireHybridAuth, async (req, res) => {
 });
 
 router.get('/logout', requireHybridAuth, (req, res) => {
-    // Limpiar tanto sesión como JWT
+
     req.session.destroy((err) => {
         if (err) {
             console.error('Error al cerrar sesión:', err);
         }
-        // También limpiar cookie JWT
+
         res.clearCookie('jwt_token');
         res.redirect('/login');
     });

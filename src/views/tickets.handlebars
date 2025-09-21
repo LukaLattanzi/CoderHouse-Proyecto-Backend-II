@@ -14,15 +14,18 @@
     </div>
 </div>
 
-<!-- Modal personalizado para detalles del ticket -->
-<div id="custom-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; margin: 20px;">
-        <div style="padding: 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+<div id="custom-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div
+        style="background: white; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; margin: 20px;">
+        <div
+            style="padding: 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
             <h3 id="modal-title" style="margin: 0; color: #333;">Detalles del Ticket</h3>
-            <button onclick="closeCustomModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            <button onclick="closeCustomModal()"
+                style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
         </div>
         <div id="modal-content" style="padding: 20px;">
-            <!-- Los detalles se cargarán aquí -->
+
         </div>
         <div style="padding: 20px; border-top: 1px solid #ddd; display: flex; justify-content: flex-end; gap: 10px;">
             <button onclick="closeCustomModal()" class="btn btn-secondary">Cerrar</button>
@@ -40,9 +43,9 @@
 
     async function loadUserTickets() {
         try {
-            // Obtener el token del localStorage con el nombre correcto
+
             const token = localStorage.getItem('jwt_token');
-            
+
             if (!token) {
                 console.error('No token found, redirecting to login');
                 if (typeof Toastify !== 'undefined') {
@@ -126,12 +129,12 @@
                         <h5 class="mb-0 text-primary">Ticket #${ticket.code}</h5>
                         <small class="text-muted">
                             ${new Date(ticket.purchase_datetime).toLocaleString('es-ES', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}
                         </small>
                     </div>
                     <h4 class="mb-0 text-success">$${ticket.amount.toFixed(2)}</h4>
@@ -158,9 +161,9 @@
     async function viewTicketDetails(ticketId) {
         try {
             const token = localStorage.getItem('jwt_token');
-            
+
             console.log('Loading ticket details for:', ticketId);
-            
+
             const response = await fetch(`/api/tickets/${ticketId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -212,12 +215,10 @@
             </div>
         `).join('');
 
-        // Configurar el título del modal
         document.getElementById('modal-title').innerHTML = `
             <i class="bi bi-receipt text-primary"></i> Ticket #${ticket.code}
         `;
 
-        // Configurar el contenido del modal
         document.getElementById('modal-content').innerHTML = `
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -227,13 +228,13 @@
                                 <i class="bi bi-calendar-event text-primary"></i> Información de Compra
                             </h6>
                             <p class="mb-2"><strong>Fecha:</strong> ${new Date(ticket.purchase_datetime).toLocaleString('es-ES', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}</p>
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}</p>
                             <p class="mb-0"><strong>Comprador:</strong> ${ticket.purchaser}</p>
                         </div>
                     </div>
@@ -272,25 +273,18 @@
             </div>
         `;
 
-        // Mostrar el modal
         const modal = document.getElementById('custom-modal');
         modal.style.display = 'flex';
-        
-        // Agregar event listener para cerrar con ESC
+
         document.addEventListener('keydown', handleModalKeydown);
-        
-        // Prevenir scroll del body cuando el modal está abierto
         document.body.style.overflow = 'hidden';
     }
 
     function closeCustomModal() {
         const modal = document.getElementById('custom-modal');
         modal.style.display = 'none';
-        
-        // Remover event listener
+
         document.removeEventListener('keydown', handleModalKeydown);
-        
-        // Restaurar scroll del body
         document.body.style.overflow = 'auto';
     }
 
@@ -336,8 +330,7 @@
         printWindow.focus();
     }
 
-    // Cerrar modal al hacer clic fuera de él
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         const modal = document.getElementById('custom-modal');
         if (event.target === modal) {
             closeCustomModal();
@@ -346,55 +339,57 @@
 </script>
 
 <style>
-    /* Estilos adicionales para mejorar la presentación */
     .ticket-card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
+
     .ticket-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
-    
+
     .spinner-border {
         width: 3rem;
         height: 3rem;
     }
-    
-    /* Animación para el modal */
+
     #custom-modal {
         animation: fadeIn 0.3s ease;
     }
-    
-    #custom-modal > div {
+
+    #custom-modal>div {
         animation: slideIn 0.3s ease;
     }
-    
+
     @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
-    
+
     @keyframes slideIn {
-        from { 
+        from {
             opacity: 0;
             transform: translateY(-50px) scale(0.9);
         }
-        to { 
+
+        to {
             opacity: 1;
             transform: translateY(0) scale(1);
         }
     }
-    
-    /* Responsive para el modal */
+
     @media (max-width: 768px) {
-        #custom-modal > div {
+        #custom-modal>div {
             width: 95%;
             margin: 10px;
         }
     }
-    
-    /* Estilos para impresión */
+
     @media print {
         #custom-modal {
             display: none !important;

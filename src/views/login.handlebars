@@ -38,66 +38,60 @@
 </div>
 
 <script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const loginBtn = document.getElementById('loginBtn');
-    const loginSpinner = document.getElementById('loginSpinner');
-    const loginError = document.getElementById('loginError');
-    
-    // Mostrar spinner y deshabilitar botón
-    loginSpinner.classList.remove('d-none');
-    loginBtn.disabled = true;
-    loginError.classList.add('d-none');
-    
-    const formData = new FormData(e.target);
-    const email = formData.get('email');
-    const password = formData.get('password');
-    
-    try {
-        const response = await fetch('/api/sessions/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.status === 'success') {
-            // Guardar token en localStorage
-            localStorage.setItem('jwt_token', data.token);
-            
-            // Establecer cookie inmediatamente para el middleware híbrido
-            document.cookie = `jwt_token=${data.token}; path=/; SameSite=Lax`;
-            
-            // Mostrar mensaje de éxito
-            if (typeof Toastify !== 'undefined') {
-                Toastify({
-                    text: "Inicio de sesión exitoso",
-                    duration: 2000,
-                    gravity: "bottom",
-                    position: "right",
-                    style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
-                }).showToast();
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const loginBtn = document.getElementById('loginBtn');
+        const loginSpinner = document.getElementById('loginSpinner');
+        const loginError = document.getElementById('loginError');
+
+        loginSpinner.classList.remove('d-none');
+        loginBtn.disabled = true;
+        loginError.classList.add('d-none');
+
+        const formData = new FormData(e.target);
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        try {
+            const response = await fetch('/api/sessions/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+
+                localStorage.setItem('jwt_token', data.token);
+
+                document.cookie = `jwt_token=${data.token}; path=/; SameSite=Lax`;
+
+                if (typeof Toastify !== 'undefined') {
+                    Toastify({
+                        text: "Inicio de sesión exitoso",
+                        duration: 2000,
+                        gravity: "bottom",
+                        position: "right",
+                        style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+                    }).showToast();
+                }
+
+                window.location.href = '/products';
+            } else {
+                loginError.textContent = data.message || 'Error en el inicio de sesión';
+                loginError.classList.remove('d-none');
             }
-            
-            // Redirigir a productos inmediatamente
-            window.location.href = '/products';
-        } else {
-            // Mostrar error
-            loginError.textContent = data.message || 'Error en el inicio de sesión';
+        } catch (error) {
+            console.error('Error:', error);
+            loginError.textContent = 'Error de conexión. Por favor, intenta de nuevo.';
             loginError.classList.remove('d-none');
+        } finally {
+            loginSpinner.classList.add('d-none');
+            loginBtn.disabled = false;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        loginError.textContent = 'Error de conexión. Por favor, intenta de nuevo.';
-        loginError.classList.remove('d-none');
-    } finally {
-        // Ocultar spinner y habilitar botón
-        loginSpinner.classList.add('d-none');
-        loginBtn.disabled = false;
-    }
-});
+    });
 </script>
