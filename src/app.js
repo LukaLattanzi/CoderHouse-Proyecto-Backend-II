@@ -24,10 +24,8 @@ import sessionsRouter from './routes/sessions.router.js';
 import ticketsRouter from './routes/tickets.router.js';
 import passport from 'passport';
 import { ProductModel } from './models/product.model.js';
-import { CartModel } from './models/cart.model.js';
 
 await import('./middlewares/passport/passport-jwt.js');
-import { requireAuth } from './middlewares/auth.js';
 
 const app = express();
 const server = http.createServer(app);
