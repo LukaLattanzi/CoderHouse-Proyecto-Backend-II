@@ -97,6 +97,25 @@ router.get('/products/:pid', requireHybridAuth, async (req, res) => {
     }
 });
 
+router.get('/cart', requireHybridAuth, async (req, res) => {
+    try {
+        const user = req.user;
+
+        if (!user.cart) {
+            console.error('Usuario sin carrito asignado:', user._id);
+            const newCart = await CartModel.create({ products: [] });
+            await UserModel.findByIdAndUpdate(user._id, { cart: newCart._id });
+            user.cart = newCart;
+        }
+
+        const cartId = user.cart?._id || user.cart;
+        res.redirect(`/carts/${cartId}`);
+    } catch (error) {
+        console.error("Error al redirigir al carrito:", error);
+        res.status(500).render('error', { message: 'Error interno al acceder al carrito' });
+    }
+});
+
 router.get('/carts/:cid', requireHybridAuth, async (req, res) => {
     try {
         const { cid } = req.params;
